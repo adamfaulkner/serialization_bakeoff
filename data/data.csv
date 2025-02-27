@@ -1,0 +1,2 @@
+"ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
+"880A0159BA5275FB","electric_bike","2025-01-16 17:50:49.136","2025-01-16 17:57:00.710","Hilltop","JC019","Pershing Field","JC024",40.7311689,-74.0575736,40.742677141,-74.051788633,"member"
