@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ESNext", "DOM"],
+    "baseUrl": ".", // Crucial for resolving relative paths to modules
+    "paths": {
+      "*": ["node_modules/*"] // This is the key:  Tell TS where to look
+    },
+    "moduleDetection": "force",
+    "outDir": "./dist",
+    "isolatedModules": true
+  }
+}

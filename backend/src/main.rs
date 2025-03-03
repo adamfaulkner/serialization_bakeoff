@@ -8,6 +8,7 @@ use axum::{
     routing::get,
     Router,
 };
+use prost::Message;
 use serde::Serialize;
 use tokio::net::TcpListener;
 
@@ -21,6 +22,10 @@ use std::{
 
 pub mod load_data;
 pub mod trip;
+
+pub mod trip_protobuf {
+    include!(concat!(env!("OUT_DIR"), "/trip_protobuf.rs"));
+}
 
 // TODO: eventually we want to serialize streams as well; the all suffix here means we serialize all trips at once
 #[derive(Serialize)]
@@ -41,6 +46,16 @@ async fn json_serialize_all(state: State<Arc<AppState>>) -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .body(Body::from(serde_json::to_vec(&response).unwrap()))
+        .unwrap()
+}
+
+async fn proto_serialize_all(state: State<Arc<AppState>>) -> Response {
+    let trips = state.data.iter().map(|trip| trip.into()).collect();
+
+    let response = trip_protobuf::ServerResponseAll { trips };
+    Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::from(response.encode_to_vec()))
         .unwrap()
 }
 
@@ -70,14 +85,16 @@ async fn main() {
     let shared_state = Arc::new(AppState { data });
 
     let app: Router<()> = Router::new()
-        .fallback_service(tower_http::services::ServeFile::new(
-            "../frontend/index.html",
-        ))
         .nest_service(
-            "/code.js",
-            tower_http::services::ServeFile::new("../frontend/code.js"),
+            "",
+            tower_http::services::ServeFile::new("../frontend/index.html"),
+        )
+        .nest_service(
+            "/dist/",
+            tower_http::services::ServeDir::new("../frontend/dist"),
         )
         .route("/json/all", get(json_serialize_all))
+        .route("/proto/all", get(proto_serialize_all))
         .layer(middleware::from_fn(add_headers))
         .with_state(shared_state);
 

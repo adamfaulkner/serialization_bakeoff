@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package trip_protobuf;
+
+import "google/protobuf/timestamp.proto";
+
+enum RideableType {
+  UNKNOWN_RIDEABLE_TYPE = 0;
+  ELECTRIC_BIKE = 1;
+  CLASSIC_BIKE = 2;
+}
+
+enum MemberCasual {
+  UNKNOWN_MEMBER_CASUAL = 0;
+  MEMBER = 1;
+  CASUAL = 2;
+}
+
+// The header row of the csv is:
+// "ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
+message Trip {
+    string ride_id = 1;
+    RideableType rideable_type = 2;
+    google.protobuf.Timestamp started_at = 3;
+    google.protobuf.Timestamp ended_at = 4;
+    string start_station_name = 5;
+    string start_station_id = 6;
+    string end_station_name = 7;
+    string end_station_id = 8;
+    double start_lat = 9;
+    double start_lng = 10;
+    double end_lat = 11;
+    double end_lng = 12;
+    MemberCasual member_casual = 13;
+}
+
+message ServerResponseAll {
+    repeated Trip trips = 1;
+}

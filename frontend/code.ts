@@ -1,3 +1,7 @@
+const protobufjs = await import("protobufjs");
+const response = await protobufjs.load("./dist/trip.proto");
+const ServerResponseAllProtobuf = response.lookupType("trip_protobuf.ServerResponseAll");
+
 enum RideableType {
   electric = "electric_bike",
   classic = "classic_bike",
@@ -34,17 +38,16 @@ type ServerResponseAll = {
 
 interface Deserializer {
   name: string;
-  deserialize: (data: ReadableStream<Uint8Array>) => Promise<ServerResponseAll>;
+  deserialize: (data: ReadableStream<Uint8Array>, fullLength: number) => Promise<ServerResponseAll>;
 }
 
 const DESERIALIZERS: Array<Deserializer> = [
   {
     name: "json",
-    deserialize: async (data: ReadableStream<Uint8Array>) => {
+    deserialize: async (data: ReadableStream<Uint8Array>, fullLength: number) => {
       const reader = data.getReader();
       const decoder = new TextDecoder();
       let chunks: Array<string> = [];
-      let done = false;
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
@@ -55,23 +58,44 @@ const DESERIALIZERS: Array<Deserializer> = [
       return JSON.parse(chunks.join(""));
     },
   },
+  {
+    name: "proto",
+    deserialize: async (data: ReadableStream<Uint8Array>, fullLength: number) => {
+      const reader = data.getReader();
+      const buffer = new Uint8Array(fullLength);
+      let offset = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        buffer.set(value, offset);
+        offset += value.length;
+      }
+      const response = ServerResponseAllProtobuf.decode(buffer) as unknown as any;
+      return { trips: response.trips };
+    },
+  },
 ];
 
 type DeserializeAllStats = {
+  name: string;
   size: number;
   elapsedDeserializeTime: number;
 };
 
-async function deserializeAllTest(
-  d: Deserializer,
-): Promise<DeserializeAllStats> {
+async function deserializeAllTest(d: Deserializer): Promise<DeserializeAllStats> {
+  if (protobufjs === undefined) {
+    throw new Error("protobuf is undefined");
+  }
   const response = await fetch(`/${d.name}/all`);
   const body = response.body;
+  const size = parseInt(response.headers.get("content-length") || "0");
   if (body === null) {
     throw new Error("Response stream is null");
   }
   const deserializeStartTime = performance.now();
-  const serverResponse = await d.deserialize(body);
+  const serverResponse = await d.deserialize(body, size);
   const elapsedDeserializeTime = performance.now() - deserializeStartTime;
 
   // Simple thing to defeat the optimizer
@@ -82,7 +106,8 @@ async function deserializeAllTest(
   }
 
   return {
-    size: parseInt(response.headers.get("content-length") || "0"),
+    name: d.name,
+    size: size,
     elapsedDeserializeTime,
   };
 }
@@ -92,6 +117,5 @@ async function runDeserializeAllTests() {
   console.table(results);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  runDeserializeAllTests().finally(() => console.log("done"));
-});
+await runDeserializeAllTests();
+console.log("done");

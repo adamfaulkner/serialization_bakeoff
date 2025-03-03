@@ -1,1 +1,3 @@
 data/
+*.js
+*/node_modules/*
