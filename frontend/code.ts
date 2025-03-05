@@ -1,4 +1,6 @@
-const protobufjs = await import("protobufjs");
+import * as protobufjs from "protobufjs";
+import * as msgpackr from "msgpackr";
+
 const response = await protobufjs.load("./dist/trip.proto");
 const ServerResponseAllProtobuf = response.lookupType("trip_protobuf.ServerResponseAll");
 
@@ -38,41 +40,28 @@ type ServerResponseAll = {
 
 interface Deserializer {
   name: string;
-  deserialize: (data: ReadableStream<Uint8Array>, fullLength: number) => Promise<ServerResponseAll>;
+  deserializeAll: (data: Uint8Array, fullLength: number) => Promise<ServerResponseAll>;
 }
 
 const DESERIALIZERS: Array<Deserializer> = [
   {
     name: "json",
-    deserialize: async (data: ReadableStream<Uint8Array>, fullLength: number) => {
-      const reader = data.getReader();
+    deserializeAll: async (data: Uint8Array, fullLength: number) => {
       const decoder = new TextDecoder();
-      let chunks: Array<string> = [];
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
-        chunks.push(decoder.decode(value));
-      }
-      return JSON.parse(chunks.join(""));
+      return JSON.parse(decoder.decode(data));
     },
   },
   {
     name: "proto",
-    deserialize: async (data: ReadableStream<Uint8Array>, fullLength: number) => {
-      const reader = data.getReader();
-      const buffer = new Uint8Array(fullLength);
-      let offset = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
-        buffer.set(value, offset);
-        offset += value.length;
-      }
-      const response = ServerResponseAllProtobuf.decode(buffer) as unknown as any;
+    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+      const response = ServerResponseAllProtobuf.decode(data) as unknown as any;
+      return { trips: response.trips };
+    },
+  },
+  {
+    name: "msgpack",
+    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+      const response = await msgpackr.unpack(data);
       return { trips: response.trips };
     },
   },
@@ -82,20 +71,25 @@ type DeserializeAllStats = {
   name: string;
   size: number;
   elapsedDeserializeTime: number;
+  timeToFirstByte: number;
+  totalTransferTime: number;
+  encodeTime: number;
 };
 
 async function deserializeAllTest(d: Deserializer): Promise<DeserializeAllStats> {
   if (protobufjs === undefined) {
     throw new Error("protobuf is undefined");
   }
-  const response = await fetch(`/${d.name}/all`);
-  const body = response.body;
+  const fetchStart = performance.now();
+  const response = await fetch(`/${d.name}`);
+  const timeToFirstByte = performance.now() - fetchStart;
+  const bodyBytes = await response.bytes();
+  const totalTransferTime = performance.now() - fetchStart;
+  const encodeTime = parseInt(response.headers.get("x-encode-duration") || "0");
+
   const size = parseInt(response.headers.get("content-length") || "0");
-  if (body === null) {
-    throw new Error("Response stream is null");
-  }
   const deserializeStartTime = performance.now();
-  const serverResponse = await d.deserialize(body, size);
+  const serverResponse = await d.deserializeAll(bodyBytes, size);
   const elapsedDeserializeTime = performance.now() - deserializeStartTime;
 
   // Simple thing to defeat the optimizer
@@ -109,11 +103,18 @@ async function deserializeAllTest(d: Deserializer): Promise<DeserializeAllStats>
     name: d.name,
     size: size,
     elapsedDeserializeTime,
+    timeToFirstByte,
+    totalTransferTime,
+    encodeTime,
   };
 }
 
 async function runDeserializeAllTests() {
-  const results = await Promise.all(DESERIALIZERS.map(deserializeAllTest));
+  const results = [];
+  // These must happen sequentially to avoid event loop contention on the client side.
+  for (const d of DESERIALIZERS) {
+    results.push(await deserializeAllTest(d));
+  }
   console.table(results);
 }
 
