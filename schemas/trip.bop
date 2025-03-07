@@ -1,0 +1,33 @@
+enum RideableType {
+    UNKNOWN = 0;
+    BICYCLE = 1;
+    EBICYCLE = 2;
+}
+
+enum MemberCasual {
+    UNKNOWN = 0;
+    MEMBER = 1;
+    CASUAL = 2;
+}
+
+// The header row of the csv is:
+// "ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
+struct Trip {
+    string ride_id;
+    RideableType rideable_type;
+    date started_at;
+    date ended_at;
+    string start_station_name;
+    string start_station_id;
+    string end_station_name;
+    string end_station_id;
+    float64 start_lat;
+    float64 start_lng;
+    float64 end_lat;
+    float64 end_lng;
+    MemberCasual member_casual;
+}
+
+message ServerResponseAll {
+    1 -> Trip[] trips;
+}

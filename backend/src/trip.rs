@@ -1,11 +1,12 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::trip_protobuf;
+use crate::generated::trip as bebop_trip;
+use crate::{trip_capnp, trip_protobuf};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-enum RideableType {
+pub enum RideableType {
     ElectricBike,
     ClassicBike,
 }
@@ -19,9 +20,27 @@ impl From<&RideableType> for trip_protobuf::RideableType {
     }
 }
 
+impl From<&RideableType> for bebop_trip::RideableType {
+    fn from(rideable_type: &RideableType) -> Self {
+        match rideable_type {
+            RideableType::ElectricBike => bebop_trip::RideableType::Ebicycle,
+            RideableType::ClassicBike => bebop_trip::RideableType::Bicycle,
+        }
+    }
+}
+
+impl From<&RideableType> for trip_capnp::RideableType {
+    fn from(rideable_type: &RideableType) -> Self {
+        match rideable_type {
+            RideableType::ElectricBike => trip_capnp::RideableType::ElectricBike,
+            RideableType::ClassicBike => trip_capnp::RideableType::ClassicBike,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-enum MemberCasual {
+pub enum MemberCasual {
     Member,
     Casual,
 }
@@ -31,6 +50,24 @@ impl From<&MemberCasual> for trip_protobuf::MemberCasual {
         match member_casual {
             MemberCasual::Member => trip_protobuf::MemberCasual::Member,
             MemberCasual::Casual => trip_protobuf::MemberCasual::Casual,
+        }
+    }
+}
+
+impl From<&MemberCasual> for bebop_trip::MemberCasual {
+    fn from(member_casual: &MemberCasual) -> Self {
+        match member_casual {
+            MemberCasual::Member => bebop_trip::MemberCasual::Member,
+            MemberCasual::Casual => bebop_trip::MemberCasual::Casual,
+        }
+    }
+}
+
+impl From<&MemberCasual> for trip_capnp::MemberCasual {
+    fn from(member_casual: &MemberCasual) -> Self {
+        match member_casual {
+            MemberCasual::Member => trip_capnp::MemberCasual::Member,
+            MemberCasual::Casual => trip_capnp::MemberCasual::Casual,
         }
     }
 }
@@ -49,21 +86,21 @@ where
 // "ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Trip {
-    ride_id: String,
-    rideable_type: RideableType,
+    pub ride_id: String,
+    pub rideable_type: RideableType,
     #[serde(deserialize_with = "deserialize_datetime_from_str")]
-    started_at: DateTime<Utc>,
+    pub started_at: DateTime<Utc>,
     #[serde(deserialize_with = "deserialize_datetime_from_str")]
-    ended_at: DateTime<Utc>,
-    start_station_name: String,
-    start_station_id: String,
-    end_station_name: String,
-    end_station_id: String,
-    start_lat: Option<f64>,
-    start_lng: Option<f64>,
-    end_lat: Option<f64>,
-    end_lng: Option<f64>,
-    member_casual: MemberCasual,
+    pub ended_at: DateTime<Utc>,
+    pub start_station_name: String,
+    pub start_station_id: String,
+    pub end_station_name: String,
+    pub end_station_id: String,
+    pub start_lat: Option<f64>,
+    pub start_lng: Option<f64>,
+    pub end_lat: Option<f64>,
+    pub end_lng: Option<f64>,
+    pub member_casual: MemberCasual,
 }
 
 impl From<&Trip> for trip_protobuf::Trip {
@@ -71,14 +108,8 @@ impl From<&Trip> for trip_protobuf::Trip {
         trip_protobuf::Trip {
             ride_id: trip.ride_id.clone(),
             rideable_type: Into::<trip_protobuf::RideableType>::into(&trip.rideable_type).into(),
-            started_at: Some(prost_types::Timestamp {
-                seconds: trip.started_at.timestamp(),
-                nanos: trip.started_at.timestamp_subsec_nanos() as i32,
-            }),
-            ended_at: Some(prost_types::Timestamp {
-                seconds: trip.ended_at.timestamp(),
-                nanos: trip.ended_at.timestamp_subsec_nanos() as i32,
-            }),
+            started_at_ms: trip.started_at.timestamp_millis(),
+            ended_at_ms: trip.ended_at.timestamp_millis(),
             start_station_name: trip.start_station_name.clone(),
             start_station_id: trip.start_station_id.clone(),
             end_station_name: trip.end_station_name.clone(),
@@ -88,6 +119,30 @@ impl From<&Trip> for trip_protobuf::Trip {
             end_lat: trip.end_lat.unwrap_or(0.0),
             end_lng: trip.end_lng.unwrap_or(0.0),
             member_casual: Into::<trip_protobuf::MemberCasual>::into(&trip.member_casual).into(),
+        }
+    }
+}
+
+impl<'a> From<&'a Trip> for bebop_trip::Trip<'a> {
+    fn from(trip: &'a Trip) -> Self {
+        bebop_trip::Trip {
+            ride_id: &trip.ride_id,
+            rideable_type: Into::<bebop_trip::RideableType>::into(&trip.rideable_type).into(),
+            started_at: bebop::Date::from_millis_since_unix_epoch(
+                trip.started_at.timestamp_millis() as u64,
+            ),
+            ended_at: bebop::Date::from_millis_since_unix_epoch(
+                trip.ended_at.timestamp_millis() as u64
+            ),
+            start_station_name: &trip.start_station_name,
+            start_station_id: &trip.start_station_id,
+            end_station_name: &trip.end_station_name,
+            end_station_id: &trip.end_station_id,
+            start_lat: trip.start_lat.unwrap_or(0.0),
+            start_lng: trip.start_lng.unwrap_or(0.0),
+            end_lat: trip.end_lat.unwrap_or(0.0),
+            end_lng: trip.end_lng.unwrap_or(0.0),
+            member_casual: Into::<bebop_trip::MemberCasual>::into(&trip.member_casual).into(),
         }
     }
 }

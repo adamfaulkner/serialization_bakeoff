@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package trip_protobuf;
 
-import "google/protobuf/timestamp.proto";
-
 enum RideableType {
   UNKNOWN_RIDEABLE_TYPE = 0;
   ELECTRIC_BIKE = 1;
@@ -21,8 +19,8 @@ enum MemberCasual {
 message Trip {
     string ride_id = 1;
     RideableType rideable_type = 2;
-    google.protobuf.Timestamp started_at = 3;
-    google.protobuf.Timestamp ended_at = 4;
+    int64 started_at_ms = 3;
+    int64 ended_at_ms = 4;
     string start_station_name = 5;
     string start_station_id = 6;
     string end_station_name = 7;

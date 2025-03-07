@@ -1,0 +1,11 @@
+3/7
+
+- [X] switch to cborium
+- [X] Bebop
+- Flatbuffers
+- capnproto
+- [X] switch protobuf timestamps to just numbers
+
+Future:
+- Figure out how to use the records extension for cbor
+- use https to see if that fixes our network issues.
