@@ -1,5 +1,6 @@
 import * as protobufjs from "protobufjs";
 import * as msgpackr from "msgpackr";
+import * as cbor from "cbor-x";
 
 const response = await protobufjs.load("./dist/trip.proto");
 const ServerResponseAllProtobuf = response.lookupType("trip_protobuf.ServerResponseAll");
@@ -62,6 +63,13 @@ const DESERIALIZERS: Array<Deserializer> = [
     name: "msgpack",
     deserializeAll: async (data: Uint8Array, fullLength: number) => {
       const response = await msgpackr.unpack(data);
+      return { trips: response.trips };
+    },
+  },
+  {
+    name: "cbor",
+    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+      const response = await cbor.decode(data);
       return { trips: response.trips };
     },
   },

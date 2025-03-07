@@ -10,6 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "cbor-x": "^1.6.0",
     "msgpackr": "^1.11.2",
     "protobufjs": "^7.4.0"
   },

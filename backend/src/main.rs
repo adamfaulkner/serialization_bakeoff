@@ -61,10 +61,25 @@ async fn proto_serialize_all(state: State<Arc<AppState>>) -> Response {
         .unwrap()
 }
 
+// TODO: see if we can find a way to avoid having all the names in the serialized response for this
+// and cbor.
 async fn rmp_serialize_all(state: State<Arc<AppState>>) -> Response {
     let encode_start = Instant::now();
     let response = ServerResponseAll { trips: &state.data };
     let encoded_response = rmp_serde::to_vec_named(&response).unwrap();
+    let encode_duration = encode_start.elapsed();
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("X-Encode-Duration", encode_duration.as_millis().to_string())
+        .body(Body::from(encoded_response))
+        .unwrap()
+}
+
+async fn cbor_serialize_all(state: State<Arc<AppState>>) -> Response {
+    let encode_start = Instant::now();
+    let response = ServerResponseAll { trips: &state.data };
+    let encoded_response = serde_cbor::ser::to_vec(&response).unwrap();
     let encode_duration = encode_start.elapsed();
 
     Response::builder()
@@ -129,6 +144,7 @@ async fn main() {
         .route("/json", get(json_serialize_all))
         .route("/proto", get(proto_serialize_all))
         .route("/msgpack", get(rmp_serialize_all))
+        .route("/cbor", get(cbor_serialize_all))
         .layer(middleware::from_fn(add_headers))
         .layer(middleware::from_fn(log_request_stats))
         .with_state(shared_state);
