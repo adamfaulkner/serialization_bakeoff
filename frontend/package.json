@@ -12,11 +12,14 @@
   "dependencies": {
     "bebop": "^3.1.3",
     "bebop-tools": "^3.1.3",
+    "capnp-es": "^0.0.7",
+    "capnp-ts": "^0.7.0",
     "cbor-x": "^1.6.0",
     "msgpackr": "^1.11.2",
     "protobufjs": "^7.4.0"
   },
   "devDependencies": {
+    "capnpc-ts": "^0.7.0",
     "esbuild": "^0.25.0"
   }
 }

@@ -2,6 +2,8 @@ import * as protobufjs from "protobufjs";
 import * as msgpackr from "msgpackr";
 import * as cbor from "cbor-x";
 import { ServerResponseAll as ServerResponseAllBebop } from "./bops.gen.js";
+import { ServerResponseAll as ServerResponseAllCapnp } from "./capnp_trip.js";
+import * as capnp from "capnp-es";
 
 const response = await protobufjs.load("./dist/trip.proto");
 const ServerResponseAllProtobuf = response.lookupType("trip_protobuf.ServerResponseAll");
@@ -78,6 +80,15 @@ const DESERIALIZERS: Array<Deserializer> = [
     name: "bebop",
     deserializeAll: async (data: Uint8Array, fullLength: number) => {
       const response = ServerResponseAllBebop.decode(data);
+      return { trips: response.trips };
+    },
+  },
+  {
+    name: "capnp",
+    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+      const responseMessage = new capnp.Message(data, true, true);
+      const response = responseMessage.getRoot(ServerResponseAllCapnp);
+
       return { trips: response.trips };
     },
   },
