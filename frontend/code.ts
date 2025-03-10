@@ -3,7 +3,9 @@ import * as msgpackr from "msgpackr";
 import * as cbor from "cbor-x";
 import { ServerResponseAll as ServerResponseAllBebop } from "./bops.gen.js";
 import { ServerResponseAll as ServerResponseAllCapnp } from "./capnp_trip.js";
+import { ServerResponseAll as ServerResponseAllFlatbuffers } from "./flatbuffers/server-response-all.js";
 import * as capnp from "capnp-es";
+import * as flatbuffers from "flatbuffers";
 
 const response = await protobufjs.load("./dist/trip.proto");
 const ServerResponseAllProtobuf = response.lookupType("trip_protobuf.ServerResponseAll");
@@ -44,7 +46,8 @@ type ServerResponseAll = {
 
 interface Deserializer {
   name: string;
-  deserializeAll: (data: Uint8Array, fullLength: number) => Promise<ServerResponseAll>;
+  deserializeAll: (data: Uint8Array, fullLength: number) => Promise<any>;
+  scanResult: (deserialized: any, targetId: string) => Promise<boolean>;
 }
 
 const DESERIALIZERS: Array<Deserializer> = [
@@ -54,12 +57,20 @@ const DESERIALIZERS: Array<Deserializer> = [
       const decoder = new TextDecoder();
       return JSON.parse(decoder.decode(data));
     },
+    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+      const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
+      return trip !== undefined;
+    },
   },
   {
     name: "proto",
     deserializeAll: async (data: Uint8Array, fullLength: number) => {
       const response = ServerResponseAllProtobuf.decode(data) as unknown as any;
       return { trips: response.trips };
+    },
+    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+      const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
+      return trip !== undefined;
     },
   },
   {
@@ -68,6 +79,10 @@ const DESERIALIZERS: Array<Deserializer> = [
       const response = await msgpackr.unpack(data);
       return { trips: response.trips };
     },
+    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+      const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
+      return trip !== undefined;
+    },
   },
   {
     name: "cbor",
@@ -75,12 +90,20 @@ const DESERIALIZERS: Array<Deserializer> = [
       const response = await cbor.decode(data);
       return { trips: response.trips };
     },
+    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+      const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
+      return trip !== undefined;
+    },
   },
   {
     name: "bebop",
     deserializeAll: async (data: Uint8Array, fullLength: number) => {
       const response = ServerResponseAllBebop.decode(data);
       return { trips: response.trips };
+    },
+    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+      const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
+      return trip !== undefined;
     },
   },
   {
@@ -90,6 +113,31 @@ const DESERIALIZERS: Array<Deserializer> = [
       const response = responseMessage.getRoot(ServerResponseAllCapnp);
 
       return { trips: response.trips };
+    },
+    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+      const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
+      return trip !== undefined;
+    },
+  },
+  {
+    name: "flatbuffers",
+    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+      const response = ServerResponseAllFlatbuffers.getRootAsServerResponseAll(
+        new flatbuffers.ByteBuffer(data),
+      );
+      return response;
+    },
+    scanResult: async (deserialized: ServerResponseAllFlatbuffers, targetId: string) => {
+      // Optimization: avoid constructing one object per trip.
+      let t;
+      let tripsLength = deserialized.tripsLength();
+      for (let i = 0; i < tripsLength; i++) {
+        t = deserialized.trips(i, t) ?? undefined;
+        if (t?.rideId() === targetId) {
+          return true;
+        }
+      }
+      return false;
     },
   },
 ];
@@ -101,6 +149,7 @@ type DeserializeAllStats = {
   timeToFirstByte: number;
   totalTransferTime: number;
   encodeTime: number;
+  elapsedScanTime: number;
 };
 
 async function deserializeAllTest(d: Deserializer): Promise<DeserializeAllStats> {
@@ -119,12 +168,9 @@ async function deserializeAllTest(d: Deserializer): Promise<DeserializeAllStats>
   const serverResponse = await d.deserializeAll(bodyBytes, size);
   const elapsedDeserializeTime = performance.now() - deserializeStartTime;
 
-  // Simple thing to defeat the optimizer
-  for (const trip of serverResponse.trips) {
-    if (trip.rideId === "123") {
-      console.log(trip);
-    }
-  }
+  const scanStartTime = performance.now();
+  const scanResult = await d.scanResult(serverResponse, "123");
+  const elapsedScanTime = performance.now() - scanStartTime;
 
   return {
     name: d.name,
@@ -133,6 +179,7 @@ async function deserializeAllTest(d: Deserializer): Promise<DeserializeAllStats>
     timeToFirstByte,
     totalTransferTime,
     encodeTime,
+    elapsedScanTime,
   };
 }
 

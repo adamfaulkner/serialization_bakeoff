@@ -2,7 +2,7 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::generated::trip as bebop_trip;
-use crate::{trip_capnp, trip_protobuf};
+use crate::{trip_capnp, trip_flatbuffer, trip_protobuf};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -38,6 +38,15 @@ impl From<&RideableType> for trip_capnp::RideableType {
     }
 }
 
+impl From<&RideableType> for trip_flatbuffer::trip::RideableType {
+    fn from(rideable_type: &RideableType) -> Self {
+        match rideable_type {
+            RideableType::ElectricBike => trip_flatbuffer::trip::RideableType::ELECTRIC_BIKE,
+            RideableType::ClassicBike => trip_flatbuffer::trip::RideableType::CLASSIC_BIKE,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MemberCasual {
@@ -68,6 +77,15 @@ impl From<&MemberCasual> for trip_capnp::MemberCasual {
         match member_casual {
             MemberCasual::Member => trip_capnp::MemberCasual::Member,
             MemberCasual::Casual => trip_capnp::MemberCasual::Casual,
+        }
+    }
+}
+
+impl From<&MemberCasual> for trip_flatbuffer::trip::MemberCasual {
+    fn from(member_casual: &MemberCasual) -> Self {
+        match member_casual {
+            MemberCasual::Member => trip_flatbuffer::trip::MemberCasual::MEMBER,
+            MemberCasual::Casual => trip_flatbuffer::trip::MemberCasual::CASUAL,
         }
     }
 }

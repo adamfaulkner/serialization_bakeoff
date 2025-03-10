@@ -21,6 +21,8 @@ pub mod trip;
 pub mod generated;
 use generated::trip::{ServerResponseAll as BebopServerResponseAll, Trip as BebopTrip};
 
+pub mod trip_flatbuffer;
+
 pub mod trip_protobuf {
     include!(concat!(env!("OUT_DIR"), "/trip_protobuf.rs"));
 }
@@ -152,6 +154,56 @@ async fn capnp_serialize_all(state: State<Arc<AppState>>) -> Response {
         .unwrap()
 }
 
+async fn flatbuffer_serialize_all(state: State<Arc<AppState>>) -> Response {
+    let encode_start = Instant::now();
+    let mut fbb = flatbuffers::FlatBufferBuilder::new();
+    let mut trip_offsets = Vec::with_capacity(state.data.len());
+    for trip in state.data.iter() {
+        let start_station_id = fbb.create_string(&trip.start_station_id);
+        let end_station_id = fbb.create_string(&trip.end_station_id);
+        let start_station_name = fbb.create_string(&trip.start_station_name);
+        let end_station_name = fbb.create_string(&trip.end_station_name);
+        let ride_id = fbb.create_string(&trip.ride_id);
+        let trip_offset = {
+            let mut trip_builder = trip_flatbuffer::trip::TripBuilder::new(&mut fbb);
+            trip_builder.add_ride_id(ride_id);
+            trip_builder.add_rideable_type((&trip.rideable_type).into());
+            trip_builder.add_started_at_ms(trip.started_at.timestamp_millis());
+            trip_builder.add_ended_at_ms(trip.ended_at.timestamp_millis());
+            trip_builder.add_start_station_id(start_station_id);
+            trip_builder.add_end_station_id(end_station_id);
+            trip_builder.add_start_station_name(start_station_name);
+            trip_builder.add_end_station_name(end_station_name);
+            trip_builder.add_start_lat(trip.start_lat.unwrap_or(0.0));
+            trip_builder.add_start_lng(trip.start_lng.unwrap_or(0.0));
+            trip_builder.add_end_lat(trip.end_lat.unwrap_or(0.0));
+            trip_builder.add_end_lng(trip.end_lng.unwrap_or(0.0));
+            trip_builder.add_member_casual((&trip.member_casual).into());
+            trip_builder.finish()
+        };
+        trip_offsets.push(trip_offset);
+    }
+    let vector = fbb.create_vector(&trip_offsets);
+
+    let server_response_all = trip_flatbuffer::trip::ServerResponseAll::create(
+        &mut fbb,
+        &trip_flatbuffer::trip::ServerResponseAllArgs {
+            trips: Some(vector),
+        },
+    );
+    fbb.finish(server_response_all, None);
+    // Unfortunately we need to copy this here because axum.
+    let data = fbb.finished_data().to_vec();
+
+    let encode_duration = encode_start.elapsed();
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("X-Encode-Duration", encode_duration.as_millis().to_string())
+        .body(Body::from(data))
+        .unwrap()
+}
+
 async fn add_headers(
     req: Request<Body>,
     next: middleware::Next,
@@ -210,6 +262,7 @@ async fn main() {
         .route("/cbor", get(cbor_serialize_all))
         .route("/bebop", get(bebop_serialize_all))
         .route("/capnp", get(capnp_serialize_all))
+        .route("/flatbuffers", get(flatbuffer_serialize_all))
         .layer(middleware::from_fn(add_headers))
         .layer(middleware::from_fn(log_request_stats))
         .with_state(shared_state);
