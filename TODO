@@ -6,7 +6,9 @@
 - [X] capnproto
 - [X] switch protobuf timestamps to just numbers
 
-Future:
+3/10
 - [X] Figure out how to use the records extension for cbor
   - not possible
-- use https to see if that fixes our network issues.
+- [X] use https to see if that fixes our network issues.
+  - it does
+- [X] gotta get rid of the fucking aws-lc thing

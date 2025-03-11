@@ -7,13 +7,13 @@ use axum::{
     routing::get,
     Router,
 };
+use axum_server::tls_rustls::RustlsConfig;
 use bebop::Record;
 use prost::Message;
 use serde::Serialize;
-use tokio::net::TcpListener;
 
 use crate::trip::Trip;
-use std::{convert::Infallible, sync::Arc, time::Instant};
+use std::{borrow::Cow, convert::Infallible, net::SocketAddr, sync::Arc, time::Instant};
 
 pub mod load_data;
 pub mod trip;
@@ -192,8 +192,7 @@ async fn flatbuffer_serialize_all(state: State<Arc<AppState>>) -> Response {
         },
     );
     fbb.finish(server_response_all, None);
-    // Unfortunately we need to copy this here because axum.
-    let data = fbb.finished_data().to_vec();
+    let (data, _) = fbb.collapse();
 
     let encode_duration = encode_start.elapsed();
 
@@ -267,8 +266,23 @@ async fn main() {
         .layer(middleware::from_fn(log_request_stats))
         .with_state(shared_state);
 
-    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .unwrap();
+
+    // configure certificate and private key used by https
+    let config = RustlsConfig::from_pem_file(
+        "../self_signed_cert/localhost.crt",
+        "../self_signed_cert/localhost.key",
+    )
+    .await
+    .unwrap();
+
+    // run https server
 
     print!("Listening on 0.0.0.0:3000");
-    axum::serve(listener, app).await.unwrap();
+    axum_server::bind_rustls(SocketAddr::from(([0, 0, 0, 0], 3000)), config)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 }
