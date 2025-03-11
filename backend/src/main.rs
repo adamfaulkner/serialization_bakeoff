@@ -1,5 +1,5 @@
 use axum::{
-    body::Body,
+    body::{Body, BodyDataStream},
     extract::State,
     http::{Request, StatusCode},
     middleware,
@@ -9,11 +9,18 @@ use axum::{
 };
 use axum_server::tls_rustls::RustlsConfig;
 use bebop::Record;
+use bytes::Buf;
 use prost::Message;
 use serde::Serialize;
 
 use crate::trip::Trip;
-use std::{borrow::Cow, convert::Infallible, net::SocketAddr, sync::Arc, time::Instant};
+use std::{
+    convert::Infallible,
+    io::{Cursor, Read, Write},
+    net::SocketAddr,
+    sync::Arc,
+    time::Instant,
+};
 
 pub mod load_data;
 pub mod trip;
@@ -225,6 +232,127 @@ async fn add_headers(
     Ok(response)
 }
 
+struct SwappableWriter {
+    underlying: Vec<u8>,
+}
+
+impl Write for SwappableWriter {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.underlying.write(buf)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.underlying.flush()
+    }
+}
+
+impl SwappableWriter {
+    fn take(&mut self) -> Vec<u8> {
+        std::mem::take(&mut self.underlying)
+    }
+}
+
+struct ZstdStream<'a> {
+    encoder: zstd::stream::Encoder<'a, SwappableWriter>,
+    underlying_body_stream: BodyDataStream,
+    buffered_data: Option<Cursor<bytes::Bytes>>,
+    stream_finished: bool,
+}
+
+use futures::{
+    stream::Stream,
+    task::{Context, Poll},
+    StreamExt,
+};
+use std::pin::Pin;
+
+impl<'a> ZstdStream<'a> {
+    fn new(underlying_body_stream: BodyDataStream) -> Self {
+        let encoder = zstd::stream::Encoder::new(
+            SwappableWriter {
+                underlying: Vec::new(),
+            },
+            3,
+        )
+        .unwrap();
+        ZstdStream {
+            encoder,
+            underlying_body_stream,
+            stream_finished: false,
+            buffered_data: None,
+        }
+    }
+}
+
+impl Stream for ZstdStream<'_> {
+    type Item = Result<Vec<u8>, axum::Error>;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        if self.stream_finished {
+            return Poll::Ready(None);
+        }
+
+        if let Some(buffered_data) = &mut self.buffered_data {
+            if !buffered_data.has_remaining() {
+                self.buffered_data = None;
+            } else {
+                let mut chunk = [0; 4096];
+                let read = buffered_data.read(&mut chunk).unwrap();
+                self.encoder.write_all(&chunk[..read]).unwrap();
+                let buffer = self.encoder.get_mut().take();
+                return Poll::Ready(Some(Ok(Vec::from(buffer))));
+            }
+        }
+
+        match self.underlying_body_stream.poll_next_unpin(cx) {
+            Poll::Pending => Poll::Pending,
+            Poll::Ready(None) => match self.encoder.do_finish() {
+                Ok(_) => {
+                    self.stream_finished = true;
+                    Poll::Ready(Some(Ok(self.encoder.get_mut().take())))
+                }
+                Err(e) => Poll::Ready(Some(Err(axum::Error::new(e)))),
+            },
+            Poll::Ready(Some(Ok(chunk))) => {
+                self.buffered_data = Some(Cursor::new(chunk));
+                self.poll_next(cx)
+            }
+            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(e))),
+        }
+    }
+}
+
+async fn zstd_if_requested(
+    req: Request<Body>,
+    next: middleware::Next,
+) -> Result<Response<Body>, Infallible> {
+    let compression_requested = req
+        .headers()
+        .get("X-Zstd-Enabled")
+        .is_some_and(|value| value == "true");
+    let response = next.run(req).await;
+    if !compression_requested {
+        return Ok(response);
+    }
+
+    let start = std::time::Instant::now();
+
+    let (head, body) = response.into_parts();
+    let body_bytes = body.into_data_stream();
+    let zstd_stream = ZstdStream::new(body_bytes);
+
+    let mut final_response = Response::from_parts(head, Body::from_stream(zstd_stream));
+
+    final_response
+        .headers_mut()
+        .insert("Content-Encoding", "zstd".parse().unwrap());
+    final_response.headers_mut().insert(
+        "X-Zstd-Duration",
+        start.elapsed().as_millis().to_string().parse().unwrap(),
+    );
+    Ok(final_response)
+}
+
 async fn log_request_stats(
     req: Request<Body>,
     next: middleware::Next,
@@ -264,6 +392,7 @@ async fn main() {
         .route("/flatbuffers", get(flatbuffer_serialize_all))
         .layer(middleware::from_fn(add_headers))
         .layer(middleware::from_fn(log_request_stats))
+        .layer(middleware::from_fn(zstd_if_requested))
         .with_state(shared_state);
 
     rustls::crypto::ring::default_provider()

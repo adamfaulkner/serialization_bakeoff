@@ -46,14 +46,14 @@ type ServerResponseAll = {
 
 interface Deserializer {
   name: string;
-  deserializeAll: (data: Uint8Array, fullLength: number) => Promise<any>;
+  deserializeAll: (data: Uint8Array) => Promise<any>;
   scanResult: (deserialized: any, targetId: string) => Promise<boolean>;
 }
 
 const DESERIALIZERS: Array<Deserializer> = [
   {
     name: "json",
-    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+    deserializeAll: async (data: Uint8Array) => {
       const decoder = new TextDecoder();
       return JSON.parse(decoder.decode(data));
     },
@@ -64,7 +64,7 @@ const DESERIALIZERS: Array<Deserializer> = [
   },
   {
     name: "proto",
-    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+    deserializeAll: async (data: Uint8Array) => {
       const response = ServerResponseAllProtobuf.decode(data) as unknown as any;
       return { trips: response.trips };
     },
@@ -75,7 +75,7 @@ const DESERIALIZERS: Array<Deserializer> = [
   },
   {
     name: "msgpack",
-    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+    deserializeAll: async (data: Uint8Array) => {
       const response = await msgpackr.unpack(data);
       return { trips: response.trips };
     },
@@ -86,7 +86,7 @@ const DESERIALIZERS: Array<Deserializer> = [
   },
   {
     name: "cbor",
-    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+    deserializeAll: async (data: Uint8Array) => {
       const response = await cbor.decode(data);
       return { trips: response.trips };
     },
@@ -97,7 +97,7 @@ const DESERIALIZERS: Array<Deserializer> = [
   },
   {
     name: "bebop",
-    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+    deserializeAll: async (data: Uint8Array) => {
       const response = ServerResponseAllBebop.decode(data);
       return { trips: response.trips };
     },
@@ -108,7 +108,7 @@ const DESERIALIZERS: Array<Deserializer> = [
   },
   {
     name: "capnp",
-    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+    deserializeAll: async (data: Uint8Array) => {
       const responseMessage = new capnp.Message(data, true, true);
       const response = responseMessage.getRoot(ServerResponseAllCapnp);
 
@@ -121,7 +121,7 @@ const DESERIALIZERS: Array<Deserializer> = [
   },
   {
     name: "flatbuffers",
-    deserializeAll: async (data: Uint8Array, fullLength: number) => {
+    deserializeAll: async (data: Uint8Array) => {
       const response = ServerResponseAllFlatbuffers.getRootAsServerResponseAll(
         new flatbuffers.ByteBuffer(data),
       );
@@ -145,52 +145,65 @@ const DESERIALIZERS: Array<Deserializer> = [
 type DeserializeAllStats = {
   name: string;
   size: number;
+  contentLength: number;
   elapsedDeserializeTime: number;
   timeToFirstByte: number;
   totalTransferTime: number;
   encodeTime: number;
   elapsedScanTime: number;
+  zstdDuration: number;
 };
 
-async function deserializeAllTest(d: Deserializer): Promise<DeserializeAllStats> {
+async function deserializeAllTest(d: Deserializer, zstd: boolean): Promise<DeserializeAllStats> {
   if (protobufjs === undefined) {
     throw new Error("protobuf is undefined");
   }
   const fetchStart = performance.now();
-  const response = await fetch(`/${d.name}`);
+  const response = await fetch(`/${d.name}`, { headers: { "X-Zstd-Enabled": zstd.toString() } });
   const timeToFirstByte = performance.now() - fetchStart;
   const bodyBytes = await response.bytes();
   const totalTransferTime = performance.now() - fetchStart;
   const encodeTime = parseInt(response.headers.get("x-encode-duration") || "0");
 
-  const size = parseInt(response.headers.get("content-length") || "0");
+  const resourceEntry: PerformanceResourceTiming = performance
+    .getEntriesByType("resource")
+    .findLast(
+      (entry) => entry.entryType === "resource" && entry.name.endsWith(`/${d.name}`),
+    ) as unknown as PerformanceResourceTiming;
+
+  const contentLength = resourceEntry.encodedBodySize;
+
   const deserializeStartTime = performance.now();
-  const serverResponse = await d.deserializeAll(bodyBytes, size);
+  const serverResponse = await d.deserializeAll(bodyBytes);
   const elapsedDeserializeTime = performance.now() - deserializeStartTime;
 
   const scanStartTime = performance.now();
   const scanResult = await d.scanResult(serverResponse, "123");
   const elapsedScanTime = performance.now() - scanStartTime;
+  const zstdDuration = parseInt(response.headers.get("x-zstd-duration") || "0");
 
   return {
     name: d.name,
-    size: size,
+    size: bodyBytes.length,
+    contentLength,
     elapsedDeserializeTime,
     timeToFirstByte,
     totalTransferTime,
     encodeTime,
     elapsedScanTime,
+    zstdDuration,
   };
 }
 
-async function runDeserializeAllTests() {
+async function runDeserializeAllTests(useZstd: boolean) {
   const results = [];
   // These must happen sequentially to avoid event loop contention on the client side.
   for (const d of DESERIALIZERS) {
-    results.push(await deserializeAllTest(d));
+    results.push(await deserializeAllTest(d, useZstd));
   }
   console.table(results);
 }
 
-await runDeserializeAllTests();
+await runDeserializeAllTests(false);
+await runDeserializeAllTests(true);
 console.log("done");

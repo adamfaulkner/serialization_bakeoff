@@ -12,3 +12,15 @@
 - [X] use https to see if that fixes our network issues.
   - it does
 - [X] gotta get rid of the fucking aws-lc thing
+
+3/11
+- [X] Add Zstd support in a properly streamed way
+- [X] WTF how did reqwest get in here?
+  - oh, it's just a build dependency of bebop tools. Whatever
+
+
+Future:
+- Graph generation
+- Look more closely at network performance
+- WASM decoder for each format
+- Write up
