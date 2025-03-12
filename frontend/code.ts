@@ -357,6 +357,28 @@ function getCanvasElement(id: string): HTMLCanvasElement {
   return element as HTMLCanvasElement;
 }
 
+const defaultChartOptions = {
+  backgroundColor: [
+    "rgba(255, 99, 132, 0.2)",
+    "rgba(255, 159, 64, 0.2)",
+    "rgba(255, 205, 86, 0.2)",
+    "rgba(75, 192, 192, 0.2)",
+    "rgba(54, 162, 235, 0.2)",
+    "rgba(153, 102, 255, 0.2)",
+    "rgba(201, 203, 207, 0.2)",
+  ],
+  borderColor: [
+    "rgb(255, 99, 132)",
+    "rgb(255, 159, 64)",
+    "rgb(255, 205, 86)",
+    "rgb(75, 192, 192)",
+    "rgb(54, 162, 235)",
+    "rgb(153, 102, 255)",
+    "rgb(201, 203, 207)",
+  ],
+  borderWidth: 1,
+};
+
 new Chart(getCanvasElement("sizes"), {
   type: "bar",
   data: {
@@ -365,9 +387,7 @@ new Chart(getCanvasElement("sizes"), {
       {
         label: "Serialized Size",
         data: sizeStats.map((s) => s.size),
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
-        borderColor: "rgba(255, 99, 132, 1)",
-        borderWidth: 1,
+        ...defaultChartOptions,
       },
     ],
   },
@@ -381,9 +401,7 @@ new Chart(getCanvasElement("compressedSizes"), {
       {
         label: "Compressed Size",
         data: sizeStats.map((s) => s.zstdCompressedSize),
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        borderColor: "rgba(54, 162, 235, 1)",
-        borderWidth: 1,
+        ...defaultChartOptions,
       },
     ],
   },
@@ -397,9 +415,7 @@ new Chart(getCanvasElement("serializationTime"), {
       {
         label: "Serialize Duration",
         data: performanceStats.map((s) => s.serializeDuration),
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        borderColor: "rgba(54, 162, 235, 1)",
-        borderWidth: 1,
+        ...defaultChartOptions,
       },
     ],
   },
@@ -413,9 +429,7 @@ new Chart(getCanvasElement("deserializationTime"), {
       {
         label: "Deserialize Duration",
         data: performanceStats.map((s) => s.deserializeDuration),
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        borderColor: "rgba(54, 162, 235, 1)",
-        borderWidth: 1,
+        ...defaultChartOptions,
       },
     ],
   },
@@ -431,9 +445,7 @@ new Chart(getCanvasElement("endToEndPojo"), {
         data: performanceStats.map(
           (s) => s.serializeDuration + s.deserializeDuration + s.materializeAsPojoDuration,
         ),
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        borderColor: "rgba(54, 162, 235, 1)",
-        borderWidth: 1,
+        ...defaultChartOptions,
       },
     ],
   },
@@ -449,9 +461,7 @@ new Chart(getCanvasElement("endToEndScanForProperty"), {
         data: performanceStats.map(
           (s) => s.serializeDuration + s.deserializeDuration + s.scanForIdPropertyDuration,
         ),
-        backgroundColor: "rgba(54, 162, 235, 0.2)",
-        borderColor: "rgba(54, 162, 235, 1)",
-        borderWidth: 1,
+        ...defaultChartOptions,
       },
     ],
   },
