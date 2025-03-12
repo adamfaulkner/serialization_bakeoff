@@ -15,7 +15,7 @@
     "capnp-es": "^0.0.7",
     "capnp-ts": "^0.7.0",
     "cbor-x": "^1.6.0",
-    "chartjs": "^0.3.24",
+    "chart.js": "^4.4.8",
     "flatbuffers": "^25.2.10",
     "msgpackr": "^1.11.2",
     "protobufjs": "^7.4.0"

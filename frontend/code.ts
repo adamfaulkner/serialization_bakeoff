@@ -6,7 +6,7 @@ import { ServerResponseAll as ServerResponseAllCapnp } from "./capnp_trip.js";
 import { ServerResponseAll as ServerResponseAllFlatbuffers } from "./flatbuffers/server-response-all.js";
 import * as capnp from "capnp-es";
 import * as flatbuffers from "flatbuffers";
-import { N } from "capnp-es/dist/shared/capnp-es.CUIqXQ_2.mjs";
+import { Chart } from "chart.js/auto";
 
 const response = await protobufjs.load("./dist/trip.proto");
 const ServerResponseAllProtobuf = response.lookupType("trip_protobuf.ServerResponseAll");
@@ -328,24 +328,131 @@ async function serializePerformanceTests(d: Deserializer): Promise<SerializePerf
   };
 }
 
-async function runSerializeSizeTests() {
+async function runSerializeSizeTests(): Promise<Array<SerializedSizeStats>> {
   const results = [];
   // These must happen sequentially to avoid event loop contention on the client side.
   for (const d of DESERIALIZERS) {
     results.push(await serializeSizeTests(d));
   }
-  console.table(results);
+  return results;
 }
 
-async function runSerializePerformanceTests() {
+async function runSerializePerformanceTests(): Promise<Array<SerializePerformanceStats>> {
   const results = [];
   // These must happen sequentially to avoid event loop contention on the client side.
   for (const d of DESERIALIZERS) {
     results.push(await serializePerformanceTests(d));
   }
-  console.table(results);
+  return results;
 }
 
-await runSerializeSizeTests();
-await runSerializePerformanceTests();
-console.log("done");
+const sizeStats = await runSerializeSizeTests();
+const performanceStats = await runSerializePerformanceTests();
+
+function getCanvasElement(id: string): HTMLCanvasElement {
+  const element = document.getElementById(id);
+  if (element?.tagName !== "CANVAS") {
+    throw new Error(`Element with id '${id}' must be a canvas`);
+  }
+  return element as HTMLCanvasElement;
+}
+
+new Chart(getCanvasElement("sizes"), {
+  type: "bar",
+  data: {
+    labels: sizeStats.map((s) => s.name),
+    datasets: [
+      {
+        label: "Serialized Size",
+        data: sizeStats.map((s) => s.size),
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
+        borderColor: "rgba(255, 99, 132, 1)",
+        borderWidth: 1,
+      },
+    ],
+  },
+});
+
+new Chart(getCanvasElement("compressedSizes"), {
+  type: "bar",
+  data: {
+    labels: sizeStats.map((s) => s.name),
+    datasets: [
+      {
+        label: "Compressed Size",
+        data: sizeStats.map((s) => s.zstdCompressedSize),
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 1,
+      },
+    ],
+  },
+});
+
+new Chart(getCanvasElement("serializationTime"), {
+  type: "bar",
+  data: {
+    labels: performanceStats.map((s) => s.name),
+    datasets: [
+      {
+        label: "Serialize Duration",
+        data: performanceStats.map((s) => s.serializeDuration),
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 1,
+      },
+    ],
+  },
+});
+
+new Chart(getCanvasElement("deserializationTime"), {
+  type: "bar",
+  data: {
+    labels: performanceStats.map((s) => s.name),
+    datasets: [
+      {
+        label: "Deserialize Duration",
+        data: performanceStats.map((s) => s.deserializeDuration),
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 1,
+      },
+    ],
+  },
+});
+
+new Chart(getCanvasElement("endToEndPojo"), {
+  type: "bar",
+  data: {
+    labels: performanceStats.map((s) => s.name),
+    datasets: [
+      {
+        label: "End to End Duration for Regular JS Object",
+        data: performanceStats.map(
+          (s) => s.serializeDuration + s.deserializeDuration + s.materializeAsPojoDuration,
+        ),
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 1,
+      },
+    ],
+  },
+});
+
+new Chart(getCanvasElement("endToEndScanForProperty"), {
+  type: "bar",
+  data: {
+    labels: sizeStats.map((s) => s.name),
+    datasets: [
+      {
+        label: "End to End Duration to Scan for a single Property",
+        data: performanceStats.map(
+          (s) => s.serializeDuration + s.deserializeDuration + s.scanForIdPropertyDuration,
+        ),
+        backgroundColor: "rgba(54, 162, 235, 0.2)",
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 1,
+      },
+    ],
+  },
+});
