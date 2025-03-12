@@ -103,6 +103,7 @@ where
 // The header row of the csv is:
 // "ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct Trip {
     pub ride_id: String,
     pub rideable_type: RideableType,

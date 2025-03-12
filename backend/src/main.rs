@@ -199,7 +199,8 @@ async fn flatbuffer_serialize_all(state: State<Arc<AppState>>) -> Response {
         },
     );
     fbb.finish(server_response_all, None);
-    let (data, _) = fbb.collapse();
+    // Extra copy but whatever.
+    let data = Vec::from(fbb.finished_data());
 
     let encode_duration = encode_start.elapsed();
 

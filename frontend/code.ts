@@ -39,95 +39,164 @@ type Trip = {
   memberCasual: MemberCasual;
 };
 
-// TODO: eventually we want to serialize streams as well; the all suffix here means we serialize all trips at once
+// TODO: eventually we want to serialize streams as well; the `all` suffix here means we serialize all trips at once
 type ServerResponseAll = {
   trips: Array<Trip>;
 };
 
 interface Deserializer {
   name: string;
-  deserializeAll: (data: Uint8Array) => Promise<any>;
-  scanResult: (deserialized: any, targetId: string) => Promise<boolean>;
+  deserializeAll: (data: Uint8Array) => any;
+  materializeAsPojo: (deserialized: any) => ServerResponseAll;
+  scanForIdProperty: (deserialized: any, targetId: string) => boolean;
 }
 
 const DESERIALIZERS: Array<Deserializer> = [
   {
     name: "json",
-    deserializeAll: async (data: Uint8Array) => {
+    deserializeAll: (data: Uint8Array) => {
       const decoder = new TextDecoder();
       return JSON.parse(decoder.decode(data));
     },
-    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+    materializeAsPojo: (deserialized: any) => {
+      return deserialized;
+    },
+    scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
       return trip !== undefined;
     },
   },
   {
     name: "proto",
-    deserializeAll: async (data: Uint8Array) => {
-      const response = ServerResponseAllProtobuf.decode(data) as unknown as any;
-      return { trips: response.trips };
+    deserializeAll: (data: Uint8Array) => {
+      return ServerResponseAllProtobuf.decode(data) as unknown as any;
     },
-    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+    materializeAsPojo: (deserialized: any) => {
+      // The values deserialized here are POJOs. The only difference from JSON is that each object
+      // has a prototype that sets the default value for all fields.
+
+      // Actually, what about the dates? We should make this apples to apples
+      return deserialized;
+    },
+    scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
       return trip !== undefined;
     },
   },
   {
     name: "msgpack",
-    deserializeAll: async (data: Uint8Array) => {
-      const response = await msgpackr.unpack(data);
-      return { trips: response.trips };
+    deserializeAll: (data: Uint8Array) => {
+      return msgpackr.unpack(data);
     },
-    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+    materializeAsPojo: (deserialized: any) => {
+      // The values deserialized by msgpackr are POJOs.
+      return deserialized;
+    },
+    scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
       return trip !== undefined;
     },
   },
   {
     name: "cbor",
-    deserializeAll: async (data: Uint8Array) => {
-      const response = await cbor.decode(data);
-      return { trips: response.trips };
+    deserializeAll: (data: Uint8Array) => {
+      return cbor.decode(data);
     },
-    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+    materializeAsPojo: (deserialized: any) => {
+      // The values deserialized by cbor-x are POJOs.
+      return deserialized;
+    },
+    scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
       return trip !== undefined;
     },
   },
   {
     name: "bebop",
-    deserializeAll: async (data: Uint8Array) => {
-      const response = ServerResponseAllBebop.decode(data);
-      return { trips: response.trips };
+    deserializeAll: (data: Uint8Array) => {
+      return ServerResponseAllBebop.decode(data);
     },
-    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+    materializeAsPojo: (deserialized: any) => {
+      // The values deserialized by bebop are POJOs. The only differences from JSON are:
+      // 1. they have a prototype that includes some methods around validating the object and encoding it.
+      // 2. they use Date objects instead of strings for timestamps. This seems strictly harder and more useful than JSON.
+      return deserialized;
+    },
+    scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
       return trip !== undefined;
     },
   },
   {
     name: "capnp",
-    deserializeAll: async (data: Uint8Array) => {
-      const responseMessage = new capnp.Message(data, true, true);
-      const response = responseMessage.getRoot(ServerResponseAllCapnp);
-
-      return { trips: response.trips };
+    deserializeAll: (data: Uint8Array) => {
+      const responseMessage = new capnp.Message(data, false, false);
+      responseMessage._capnp.traversalLimit = Infinity;
+      return responseMessage.getRoot(ServerResponseAllCapnp);
     },
-    scanResult: async (deserialized: ServerResponseAll, targetId: string) => {
+    materializeAsPojo: (deserialized: any) => {
+      // These values aren't POJOs, they use a Proxy object to provide a POJO-like interface.
+      // Build POJOs manually.
+
+      return {
+        trips: deserialized.trips.map((trip: any) => ({
+          rideId: trip.rideId,
+          rideableType: trip.rideableType,
+          startedAt: trip.startedAtMs,
+          endedAt: trip.endedAtMs,
+          startStationName: trip.startStationName,
+          startStationId: trip.startStationId,
+          endStationName: trip.endStationName,
+          endStationId: trip.endStationId,
+          startLat: trip.startLat,
+          startLng: trip.startLng,
+          endLat: trip.endLat,
+          endLng: trip.endLng,
+          memberCasual: trip.memberCasual,
+        })),
+      };
+    },
+    scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
       return trip !== undefined;
     },
   },
   {
     name: "flatbuffers",
-    deserializeAll: async (data: Uint8Array) => {
+    deserializeAll: (data: Uint8Array) => {
       const response = ServerResponseAllFlatbuffers.getRootAsServerResponseAll(
         new flatbuffers.ByteBuffer(data),
       );
       return response;
     },
-    scanResult: async (deserialized: ServerResponseAllFlatbuffers, targetId: string) => {
+    materializeAsPojo: (deserialized: any) => {
+      // These values aren't POJOs. They don't even pretend to be :)
+      const trips = [];
+
+      for (let i = 0; i < deserialized.tripsLength(); i++) {
+        const trip = deserialized.trips(i);
+        trips.push({
+          rideId: trip.rideId(),
+          rideableType: trip.rideableType(),
+          startedAt: trip.startedAtMs(),
+          endedAt: trip.endedAtMs(),
+          startStationName: trip.startStationName(),
+          startStationId: trip.startStationId(),
+          endStationName: trip.endStationName(),
+          endStationId: trip.endStationId(),
+          startLat: trip.startLat(),
+          startLng: trip.startLng(),
+          endLat: trip.endLat(),
+          endLng: trip.endLng(),
+          memberCasual: trip.memberCasual(),
+        });
+      }
+
+      return {
+        trips,
+      };
+    },
+    scanForIdProperty: (deserialized: ServerResponseAllFlatbuffers, targetId: string) => {
       // Optimization: avoid constructing one object per trip.
       let t;
       let tripsLength = deserialized.tripsLength();
@@ -142,28 +211,23 @@ const DESERIALIZERS: Array<Deserializer> = [
   },
 ];
 
-type DeserializeAllStats = {
+type SerializedSizeStats = {
   name: string;
   size: number;
-  contentLength: number;
-  elapsedDeserializeTime: number;
-  timeToFirstByte: number;
-  totalTransferTime: number;
-  encodeTime: number;
-  elapsedScanTime: number;
-  zstdDuration: number;
+  zstdCompressedSize: number;
 };
 
-async function deserializeAllTest(d: Deserializer, zstd: boolean): Promise<DeserializeAllStats> {
-  if (protobufjs === undefined) {
-    throw new Error("protobuf is undefined");
-  }
-  const fetchStart = performance.now();
-  const response = await fetch(`/${d.name}`, { headers: { "X-Zstd-Enabled": zstd.toString() } });
-  const timeToFirstByte = performance.now() - fetchStart;
+type SerializePerformanceStats = {
+  name: string;
+  deserializeDuration: number;
+  serializeDuration: number;
+  scanForIdPropertyDuration: number;
+  materializeAsPojoDuration: number;
+};
+
+async function serializeSizeTests(d: Deserializer): Promise<SerializedSizeStats> {
+  const response = await fetch(`/${d.name}`, { headers: { "X-Zstd-Enabled": "true" } });
   const bodyBytes = await response.bytes();
-  const totalTransferTime = performance.now() - fetchStart;
-  const encodeTime = parseInt(response.headers.get("x-encode-duration") || "0");
 
   const resourceEntry: PerformanceResourceTiming = performance
     .getEntriesByType("resource")
@@ -171,39 +235,80 @@ async function deserializeAllTest(d: Deserializer, zstd: boolean): Promise<Deser
       (entry) => entry.entryType === "resource" && entry.name.endsWith(`/${d.name}`),
     ) as unknown as PerformanceResourceTiming;
 
-  const contentLength = resourceEntry.encodedBodySize;
-
-  const deserializeStartTime = performance.now();
-  const serverResponse = await d.deserializeAll(bodyBytes);
-  const elapsedDeserializeTime = performance.now() - deserializeStartTime;
-
-  const scanStartTime = performance.now();
-  const scanResult = await d.scanResult(serverResponse, "123");
-  const elapsedScanTime = performance.now() - scanStartTime;
-  const zstdDuration = parseInt(response.headers.get("x-zstd-duration") || "0");
-
   return {
     name: d.name,
     size: bodyBytes.length,
-    contentLength,
-    elapsedDeserializeTime,
-    timeToFirstByte,
-    totalTransferTime,
-    encodeTime,
-    elapsedScanTime,
-    zstdDuration,
+    zstdCompressedSize: resourceEntry.encodedBodySize,
   };
 }
 
-async function runDeserializeAllTests(useZstd: boolean) {
+async function serializePerformanceTests(d: Deserializer): Promise<SerializePerformanceStats> {
+  const response = await fetch(`/${d.name}`, { headers: { "X-Zstd-Enabled": "true" } });
+  const bodyBytes = await response.bytes();
+  const serializeDuration = parseInt(response.headers.get("x-encode-duration") || "0");
+
+  // It's possible that repeatedly using deserialized like this may cause the JIT to optimize some
+  // things in an unrealistic way.
+  const deserializeStartTime = performance.now();
+  const deserialized = await d.deserializeAll(bodyBytes);
+  const deserializeDuration = performance.now() - deserializeStartTime;
+
+  const scanStartTime = performance.now();
+  const scanResult = d.scanForIdProperty(deserialized, "123");
+  const scanForIdPropertyDuration = performance.now() - scanStartTime;
+  // Help guarantee that the scan doesn't get optimized away.
+  if (scanResult === true) {
+    throw new Error("Scan result should always be false");
+  }
+
+  const materializeAsPojoStartTime = performance.now();
+  const materialized = d.materializeAsPojo(deserialized);
+  const materializeAsPojoDuration = performance.now() - materializeAsPojoStartTime;
+  if (materialized.trips.length === 0) {
+    throw new Error("Materialized trips should not be empty");
+  }
+
+  // Verify that the materialized object is in fact the type we expect by spot checking some
+  // properties.
+  for (const trip of materialized.trips) {
+    if (typeof trip.rideId !== "string") {
+      throw new Error("Trip rideId should be a string");
+    }
+    if (typeof trip.startStationName !== "string") {
+      throw new Error("Trip startStationName should be a string");
+    }
+    if (!(trip.endLng === null || typeof trip.endLng === "number")) {
+      throw new Error("Trip endLng should be a number");
+    }
+  }
+
+  return {
+    name: d.name,
+    serializeDuration,
+    deserializeDuration,
+    scanForIdPropertyDuration,
+    materializeAsPojoDuration,
+  };
+}
+
+async function runSerializeSizeTests() {
   const results = [];
   // These must happen sequentially to avoid event loop contention on the client side.
   for (const d of DESERIALIZERS) {
-    results.push(await deserializeAllTest(d, useZstd));
+    results.push(await serializeSizeTests(d));
   }
   console.table(results);
 }
 
-await runDeserializeAllTests(false);
-await runDeserializeAllTests(true);
+async function runSerializePerformanceTests() {
+  const results = [];
+  // These must happen sequentially to avoid event loop contention on the client side.
+  for (const d of DESERIALIZERS) {
+    results.push(await serializePerformanceTests(d));
+  }
+  console.table(results);
+}
+
+await runSerializeSizeTests();
+await runSerializePerformanceTests();
 console.log("done");
