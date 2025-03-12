@@ -1,5 +1,5 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::generated::trip as bebop_trip;
 use crate::{trip_capnp, trip_flatbuffer, trip_protobuf};
@@ -100,6 +100,16 @@ where
         .map_err(serde::de::Error::custom)
 }
 
+fn serialize_datetime_to_number_ms<S>(
+    date: &DateTime<Utc>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_i64(date.timestamp_millis())
+}
+
 // The header row of the csv is:
 // "ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -107,9 +117,15 @@ where
 pub struct Trip {
     pub ride_id: String,
     pub rideable_type: RideableType,
-    #[serde(deserialize_with = "deserialize_datetime_from_str")]
+    #[serde(
+        deserialize_with = "deserialize_datetime_from_str",
+        serialize_with = "serialize_datetime_to_number_ms"
+    )]
     pub started_at: DateTime<Utc>,
-    #[serde(deserialize_with = "deserialize_datetime_from_str")]
+    #[serde(
+        deserialize_with = "deserialize_datetime_from_str",
+        serialize_with = "serialize_datetime_to_number_ms"
+    )]
     pub ended_at: DateTime<Utc>,
     pub start_station_name: String,
     pub start_station_id: String,

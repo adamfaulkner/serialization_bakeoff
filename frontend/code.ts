@@ -6,6 +6,7 @@ import { ServerResponseAll as ServerResponseAllCapnp } from "./capnp_trip.js";
 import { ServerResponseAll as ServerResponseAllFlatbuffers } from "./flatbuffers/server-response-all.js";
 import * as capnp from "capnp-es";
 import * as flatbuffers from "flatbuffers";
+import { N } from "capnp-es/dist/shared/capnp-es.CUIqXQ_2.mjs";
 
 const response = await protobufjs.load("./dist/trip.proto");
 const ServerResponseAllProtobuf = response.lookupType("trip_protobuf.ServerResponseAll");
@@ -59,7 +60,14 @@ const DESERIALIZERS: Array<Deserializer> = [
       return JSON.parse(decoder.decode(data));
     },
     materializeAsPojo: (deserialized: any) => {
-      return deserialized;
+      // The JSON dates are represented as strings.
+      return {
+        trips: deserialized.trips.map((trip: any) => ({
+          ...trip,
+          startedAt: new Date(trip.startedAt),
+          endedAt: new Date(trip.endedAt),
+        })),
+      };
     },
     scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
@@ -72,11 +80,22 @@ const DESERIALIZERS: Array<Deserializer> = [
       return ServerResponseAllProtobuf.decode(data) as unknown as any;
     },
     materializeAsPojo: (deserialized: any) => {
-      // The values deserialized here are POJOs. The only difference from JSON is that each object
-      // has a prototype that sets the default value for all fields.
+      // The values deserialized here are POJOs. The only differences from JSON are that each object
+      // has a prototype that sets the default value for all fields, and dates are in milliseconds.
 
-      // Actually, what about the dates? We should make this apples to apples
-      return deserialized;
+      return {
+        trips: deserialized.trips.map((trip: any) => ({
+          // The accessor on the trip will provide the default value when queried for a field that
+          // is not present, but the field is not considered an enumerable property and thus won't
+          // be included when we use the spread operator here.
+          //
+          // This might be considered technically incorrect, but it's consistent with the behavior
+          // of JSON above.
+          ...trip,
+          startedAt: new Date(trip.startedAtMs),
+          endedAt: new Date(trip.endedAtMs),
+        })),
+      };
     },
     scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
@@ -89,8 +108,15 @@ const DESERIALIZERS: Array<Deserializer> = [
       return msgpackr.unpack(data);
     },
     materializeAsPojo: (deserialized: any) => {
-      // The values deserialized by msgpackr are POJOs.
-      return deserialized;
+      // The values deserialized by msgpackr are POJOs, except that the dates are represented as
+      // strings.
+      return {
+        trips: deserialized.trips.map((trip: any) => ({
+          ...trip,
+          startedAt: new Date(Number(trip.startedAt)),
+          endedAt: new Date(Number(trip.endedAt)),
+        })),
+      };
     },
     scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
@@ -103,8 +129,14 @@ const DESERIALIZERS: Array<Deserializer> = [
       return cbor.decode(data);
     },
     materializeAsPojo: (deserialized: any) => {
-      // The values deserialized by cbor-x are POJOs.
-      return deserialized;
+      // The values deserialized by cbor-x are POJOs, except that the dates are represented as strings.
+      return {
+        trips: deserialized.trips.map((trip: any) => ({
+          ...trip,
+          startedAt: new Date(Number(trip.startedAt)),
+          endedAt: new Date(Number(trip.endedAt)),
+        })),
+      };
     },
     scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
@@ -119,7 +151,6 @@ const DESERIALIZERS: Array<Deserializer> = [
     materializeAsPojo: (deserialized: any) => {
       // The values deserialized by bebop are POJOs. The only differences from JSON are:
       // 1. they have a prototype that includes some methods around validating the object and encoding it.
-      // 2. they use Date objects instead of strings for timestamps. This seems strictly harder and more useful than JSON.
       return deserialized;
     },
     scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
@@ -142,8 +173,8 @@ const DESERIALIZERS: Array<Deserializer> = [
         trips: deserialized.trips.map((trip: any) => ({
           rideId: trip.rideId,
           rideableType: trip.rideableType,
-          startedAt: trip.startedAtMs,
-          endedAt: trip.endedAtMs,
+          startedAt: new Date(Number(trip.startedAtMs)),
+          endedAt: new Date(Number(trip.endedAtMs)),
           startStationName: trip.startStationName,
           startStationId: trip.startStationId,
           endStationName: trip.endStationName,
@@ -170,7 +201,7 @@ const DESERIALIZERS: Array<Deserializer> = [
       return response;
     },
     materializeAsPojo: (deserialized: any) => {
-      // These values aren't POJOs. They don't even pretend to be :)
+      // These values aren't POJOs. They also don't even pretend to be :)
       const trips = [];
 
       for (let i = 0; i < deserialized.tripsLength(); i++) {
@@ -178,8 +209,8 @@ const DESERIALIZERS: Array<Deserializer> = [
         trips.push({
           rideId: trip.rideId(),
           rideableType: trip.rideableType(),
-          startedAt: trip.startedAtMs(),
-          endedAt: trip.endedAtMs(),
+          startedAt: new Date(Number(trip.startedAtMs())),
+          endedAt: new Date(Number(trip.endedAtMs())),
           startStationName: trip.startStationName(),
           startStationId: trip.startStationId(),
           endStationName: trip.endStationName(),
@@ -274,11 +305,17 @@ async function serializePerformanceTests(d: Deserializer): Promise<SerializePerf
     if (typeof trip.rideId !== "string") {
       throw new Error("Trip rideId should be a string");
     }
-    if (typeof trip.startStationName !== "string") {
+    if (trip.startStationName !== undefined && typeof trip.startStationName !== "string") {
       throw new Error("Trip startStationName should be a string");
     }
-    if (!(trip.endLng === null || typeof trip.endLng === "number")) {
+    if (!(trip.endLng === null || trip.endLng === undefined || typeof trip.endLng === "number")) {
       throw new Error("Trip endLng should be a number");
+    }
+    if (!(trip.startedAt instanceof Date)) {
+      throw new Error("Trip startedAt should be a Date");
+    }
+    if (!(trip.endedAt instanceof Date)) {
+      throw new Error("Trip endedAt should be a Date");
     }
   }
 
