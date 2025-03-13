@@ -162,7 +162,7 @@ impl<'a> From<&'a Trip> for bebop_trip::Trip<'a> {
     fn from(trip: &'a Trip) -> Self {
         bebop_trip::Trip {
             ride_id: &trip.ride_id,
-            rideable_type: Into::<bebop_trip::RideableType>::into(&trip.rideable_type).into(),
+            rideable_type: Into::<bebop_trip::RideableType>::into(&trip.rideable_type),
             started_at: bebop::Date::from_millis_since_unix_epoch(
                 trip.started_at.timestamp_millis() as u64,
             ),
@@ -177,7 +177,7 @@ impl<'a> From<&'a Trip> for bebop_trip::Trip<'a> {
             start_lng: trip.start_lng.unwrap_or(0.0),
             end_lat: trip.end_lat.unwrap_or(0.0),
             end_lng: trip.end_lng.unwrap_or(0.0),
-            member_casual: Into::<bebop_trip::MemberCasual>::into(&trip.member_casual).into(),
+            member_casual: Into::<bebop_trip::MemberCasual>::into(&trip.member_casual),
         }
     }
 }

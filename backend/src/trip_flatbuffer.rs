@@ -467,7 +467,7 @@ pub mod trip {
         pub end_lng: f64,
         pub member_casual: MemberCasual,
     }
-    impl<'a> Default for TripArgs<'a> {
+    impl Default for TripArgs<'_> {
         #[inline]
         fn default() -> Self {
             TripArgs {
@@ -683,7 +683,7 @@ pub mod trip {
             flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Trip<'a>>>>,
         >,
     }
-    impl<'a> Default for ServerResponseAllArgs<'a> {
+    impl Default for ServerResponseAllArgs<'_> {
         #[inline]
         fn default() -> Self {
             ServerResponseAllArgs { trips: None }

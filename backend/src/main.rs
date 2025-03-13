@@ -112,7 +112,7 @@ async fn bebop_serialize_all(state: State<Arc<AppState>>) -> Response {
     let bebop_trips = state
         .data
         .iter()
-        .map(|trip| BebopTrip::from(trip))
+        .map(BebopTrip::from)
         .collect();
     let response = BebopServerResponseAll {
         trips: Some(bebop_trips),
@@ -216,6 +216,7 @@ async fn add_headers(
     next: middleware::Next,
 ) -> Result<Response<Body>, Infallible> {
     let mut response = next.run(req).await;
+    // This mumbo-jumbo is required for the browser to allow us to use high precision timers.
     response
         .headers_mut()
         .insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
@@ -223,12 +224,6 @@ async fn add_headers(
         "Cross-Origin-Embedder-Policy",
         "require-corp".parse().unwrap(),
     );
-    response
-        .headers_mut()
-        .insert("Connection", "keep-alive".parse().unwrap());
-    response
-        .headers_mut()
-        .insert("Keep-Alive", "timeout=5, max=100".parse().unwrap());
 
     Ok(response)
 }
@@ -267,7 +262,7 @@ use futures::{
 };
 use std::pin::Pin;
 
-impl<'a> ZstdStream<'a> {
+impl ZstdStream<'_> {
     fn new(underlying_body_stream: BodyDataStream) -> Self {
         let encoder = zstd::stream::Encoder::new(
             SwappableWriter {
@@ -297,11 +292,11 @@ impl Stream for ZstdStream<'_> {
             if !buffered_data.has_remaining() {
                 self.buffered_data = None;
             } else {
-                let mut chunk = [0; 4096];
+                let mut chunk = [0; 10240];
                 let read = buffered_data.read(&mut chunk).unwrap();
                 self.encoder.write_all(&chunk[..read]).unwrap();
                 let buffer = self.encoder.get_mut().take();
-                return Poll::Ready(Some(Ok(Vec::from(buffer))));
+                return Poll::Ready(Some(Ok(buffer)));
             }
         }
 
@@ -336,8 +331,6 @@ async fn zstd_if_requested(
         return Ok(response);
     }
 
-    let start = std::time::Instant::now();
-
     let (head, body) = response.into_parts();
     let body_bytes = body.into_data_stream();
     let zstd_stream = ZstdStream::new(body_bytes);
@@ -347,10 +340,6 @@ async fn zstd_if_requested(
     final_response
         .headers_mut()
         .insert("Content-Encoding", "zstd".parse().unwrap());
-    final_response.headers_mut().insert(
-        "X-Zstd-Duration",
-        start.elapsed().as_millis().to_string().parse().unwrap(),
-    );
     Ok(final_response)
 }
 
