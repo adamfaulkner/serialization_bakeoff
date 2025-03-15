@@ -129,6 +129,17 @@ where
     serializer.serialize_i64(date.timestamp_millis())
 }
 
+// TODO: This is dumb, we should represent the optional field in the schema correctly across the board.
+fn serialize_optional_double<S>(value: &Option<f64>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match value {
+        Some(v) => serializer.serialize_f64(*v),
+        None => serializer.serialize_f64(0.0),
+    }
+}
+
 // The header row of the csv is:
 // "ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -150,9 +161,13 @@ pub struct Trip {
     pub start_station_id: String,
     pub end_station_name: String,
     pub end_station_id: String,
+    #[serde(serialize_with = "serialize_optional_double")]
     pub start_lat: Option<f64>,
+    #[serde(serialize_with = "serialize_optional_double")]
     pub start_lng: Option<f64>,
+    #[serde(serialize_with = "serialize_optional_double")]
     pub end_lat: Option<f64>,
+    #[serde(serialize_with = "serialize_optional_double")]
     pub end_lng: Option<f64>,
     pub member_casual: MemberCasual,
 }

@@ -211,15 +211,15 @@ async fn flatbuffer_serialize_all(state: State<Arc<AppState>>) -> Response {
 
 async fn avro_serialize_all(state: State<Arc<AppState>>) -> Response {
     let schema_str = fs::read_to_string("../schemas/trip.avsc").unwrap();
-    let schema = apache_avro::Schema::parse_str(schema_str.as_str()).unwrap();
+    let schema: serde_avro_fast::Schema = schema_str.parse().unwrap();
     let start_time = Instant::now();
 
-    let avro_trips: Vec<AvroValue> = state.data.iter().map(|trip| trip.into()).collect();
-
-    let server_response_all_avro =
-        AvroValue::Record(vec![("trips".to_string(), AvroValue::Array(avro_trips))]);
-
-    let data = apache_avro::to_avro_datum(&schema, server_response_all_avro).unwrap();
+    let server_response_all = ServerResponseAll { trips: &state.data };
+    let data = serde_avro_fast::to_datum_vec(
+        &server_response_all,
+        &mut serde_avro_fast::ser::SerializerConfig::new(&schema),
+    )
+    .unwrap();
 
     Response::builder()
         .status(StatusCode::OK)
