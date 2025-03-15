@@ -1,3 +1,4 @@
+use apache_avro::types::Value as AvroValue;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -47,6 +48,15 @@ impl From<&RideableType> for trip_flatbuffer::trip::RideableType {
     }
 }
 
+impl From<&RideableType> for AvroValue {
+    fn from(rideable_type: &RideableType) -> Self {
+        match rideable_type {
+            RideableType::ElectricBike => AvroValue::Enum(0, "electric_bike".to_string()),
+            RideableType::ClassicBike => AvroValue::Enum(1, "classic_bike".to_string()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MemberCasual {
@@ -86,6 +96,15 @@ impl From<&MemberCasual> for trip_flatbuffer::trip::MemberCasual {
         match member_casual {
             MemberCasual::Member => trip_flatbuffer::trip::MemberCasual::MEMBER,
             MemberCasual::Casual => trip_flatbuffer::trip::MemberCasual::CASUAL,
+        }
+    }
+}
+
+impl From<&MemberCasual> for AvroValue {
+    fn from(member_casual: &MemberCasual) -> Self {
+        match member_casual {
+            MemberCasual::Member => AvroValue::Enum(0, "member".to_string()),
+            MemberCasual::Casual => AvroValue::Enum(1, "casual".to_string()),
         }
     }
 }
@@ -179,5 +198,67 @@ impl<'a> From<&'a Trip> for bebop_trip::Trip<'a> {
             end_lng: trip.end_lng.unwrap_or(0.0),
             member_casual: Into::<bebop_trip::MemberCasual>::into(&trip.member_casual),
         }
+    }
+}
+
+impl From<&Trip> for AvroValue {
+    fn from(trip: &Trip) -> Self {
+        /*
+        let schema_str = fs::read_to_string("../schemas/trip.avsc").unwrap();
+        let mut writer = avro_rs::Writer::new(
+            &avro_rs::Schema::parse_str(
+                schema_str.as_str()
+            )?,
+            Vec::new(),
+        );
+        */
+        AvroValue::Record(vec![
+            (
+                "ride_id".to_string(),
+                AvroValue::String(trip.ride_id.clone()),
+            ),
+            ("rideable_type".to_string(), (&trip.rideable_type).into()),
+            (
+                "started_at_ms".to_string(),
+                AvroValue::Long(trip.started_at.timestamp_millis()),
+            ),
+            (
+                "ended_at_ms".to_string(),
+                AvroValue::Long(trip.ended_at.timestamp_millis()),
+            ),
+            (
+                "start_station_name".to_string(),
+                AvroValue::String(trip.start_station_name.clone()),
+            ),
+            (
+                "start_station_id".to_string(),
+                AvroValue::String(trip.start_station_id.clone()),
+            ),
+            (
+                "end_station_name".to_string(),
+                AvroValue::String(trip.end_station_name.clone()),
+            ),
+            (
+                "end_station_id".to_string(),
+                AvroValue::String(trip.end_station_id.clone()),
+            ),
+            (
+                "start_lat".to_string(),
+                AvroValue::Double(trip.start_lat.unwrap_or(0.0)),
+            ),
+            (
+                "start_lng".to_string(),
+                AvroValue::Double(trip.start_lng.unwrap_or(0.0)),
+            ),
+            (
+                "end_lat".to_string(),
+                AvroValue::Double(trip.end_lat.unwrap_or(0.0)),
+            ),
+            (
+                "end_lng".to_string(),
+                AvroValue::Double(trip.end_lng.unwrap_or(0.0)),
+            ),
+            ("member_casual".to_string(), (&trip.member_casual).into()),
+        ])
     }
 }

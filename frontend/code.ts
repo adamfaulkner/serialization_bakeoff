@@ -1,6 +1,9 @@
 import * as protobufjs from "protobufjs";
 import * as msgpackr from "msgpackr";
 import * as cbor from "cbor-x";
+import * as avsc from "avsc";
+import { Buffer } from "buffer";
+
 import { ServerResponseAll as ServerResponseAllBebop } from "./bops.gen.js";
 import { ServerResponseAll as ServerResponseAllCapnp } from "./capnp_trip.js";
 import { ServerResponseAll as ServerResponseAllFlatbuffers } from "./flatbuffers/server-response-all.js";
@@ -10,6 +13,8 @@ import { Chart } from "chart.js/auto";
 
 const response = await protobufjs.load("./dist/trip.proto");
 const ServerResponseAllProtobuf = response.lookupType("trip_protobuf.ServerResponseAll");
+
+const avroSchema = await (await fetch("./dist/avro_schema.json")).text();
 
 enum RideableType {
   electric = "electric_bike",
@@ -238,6 +243,35 @@ const DESERIALIZERS: Array<Deserializer> = [
         }
       }
       return false;
+    },
+  },
+  {
+    name: "avro",
+    deserializeAll: function (data: Uint8Array) {
+      const schema = avsc.parse(avroSchema);
+      return schema.decode(Buffer.from(data)).value;
+    },
+    materializeAsPojo: function (deserialized: any): ServerResponseAll {
+      return {
+        trips: deserialized.trips.map((trip: any) => ({
+          rideId: trip.ride_id,
+          rideableType: trip.rideable_type,
+          startedAt: new Date(trip.started_at_ms),
+          endedAt: new Date(trip.ended_at_ms),
+          startStationName: trip.start_station_name,
+          startStationId: trip.start_station_id,
+          endStationName: trip.end_station_name,
+          endStationId: trip.end_station_id,
+          startLat: trip.start_lat,
+          startLng: trip.start_lng,
+          endLat: trip.end_lat,
+          endLng: trip.end_lng,
+          memberCasual: trip.member_casual,
+        })),
+      };
+    },
+    scanForIdProperty: function (deserialized: any, targetId: string): boolean {
+      return deserialized.trips.some((trip: any) => trip.ride_id === targetId);
     },
   },
 ];

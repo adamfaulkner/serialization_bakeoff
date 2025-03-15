@@ -7,6 +7,13 @@ let buildContext = await esbuild.context({
   format: "esm",
   platform: "browser",
   sourcemap: true,
+  define: {
+    "process.env.NODE_DEBUG": "false",
+    "process.platform": '"browser"',
+  },
+  alias: {
+    zlib: "browserify-zlib",
+  },
 });
 
 buildContext.watch();

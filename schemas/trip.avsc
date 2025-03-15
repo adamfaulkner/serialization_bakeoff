@@ -1,0 +1,36 @@
+{
+"name": "ServerResponseAll",
+"type": "record",
+"fields": [
+{"name": "trips", "type": {"type": "array", "items":
+{
+  "type": "record",
+  "name": "Trip",
+  "fields": [
+    {"name": "ride_id", "type": "string"},
+    {"name": "rideable_type", "type": {
+      "type": "enum",
+      "name": "RideableType",
+      "symbols": ["electric_bike", "classic_bike"]
+    }},
+    {"name": "started_at_ms", "type": "long"},
+    {"name": "ended_at_ms", "type": "long"},
+    {"name": "start_station_name", "type": "string"},
+    {"name": "start_station_id", "type": "string"},
+    {"name": "end_station_name", "type": "string"},
+    {"name": "end_station_id", "type": "string"},
+    {"name": "start_lat", "type": "double"},
+    {"name": "start_lng", "type": "double"},
+    {"name": "end_lat", "type": "double"},
+    {"name": "end_lng", "type": "double"},
+    {"name": "member_casual",
+      "type": {
+        "type": "enum",
+        "name": "MemberCasual",
+        "symbols": ["member", "casual"]
+      }
+    }
+  ]
+}}
+}]
+}

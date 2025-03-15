@@ -1,3 +1,4 @@
+use apache_avro::types::Value as AvroValue;
 use axum::{
     body::{Body, BodyDataStream},
     extract::State,
@@ -16,6 +17,7 @@ use serde::Serialize;
 use crate::trip::Trip;
 use std::{
     convert::Infallible,
+    fs,
     io::{Cursor, Read, Write},
     net::SocketAddr,
     sync::Arc,
@@ -109,11 +111,7 @@ async fn cbor_serialize_all(state: State<Arc<AppState>>) -> Response {
 
 async fn bebop_serialize_all(state: State<Arc<AppState>>) -> Response {
     let encode_start = Instant::now();
-    let bebop_trips = state
-        .data
-        .iter()
-        .map(BebopTrip::from)
-        .collect();
+    let bebop_trips = state.data.iter().map(BebopTrip::from).collect();
     let response = BebopServerResponseAll {
         trips: Some(bebop_trips),
     };
@@ -207,6 +205,28 @@ async fn flatbuffer_serialize_all(state: State<Arc<AppState>>) -> Response {
     Response::builder()
         .status(StatusCode::OK)
         .header("X-Encode-Duration", encode_duration.as_millis().to_string())
+        .body(Body::from(data))
+        .unwrap()
+}
+
+async fn avro_serialize_all(state: State<Arc<AppState>>) -> Response {
+    let schema_str = fs::read_to_string("../schemas/trip.avsc").unwrap();
+    let schema = apache_avro::Schema::parse_str(schema_str.as_str()).unwrap();
+    let start_time = Instant::now();
+
+    let avro_trips: Vec<AvroValue> = state.data.iter().map(|trip| trip.into()).collect();
+
+    let server_response_all_avro =
+        AvroValue::Record(vec![("trips".to_string(), AvroValue::Array(avro_trips))]);
+
+    let data = apache_avro::to_avro_datum(&schema, server_response_all_avro).unwrap();
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(
+            "X-Encode-Duration",
+            start_time.elapsed().as_millis().to_string(),
+        )
         .body(Body::from(data))
         .unwrap()
 }
@@ -357,6 +377,7 @@ async fn log_request_stats(
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let start = std::time::Instant::now();
     let data: Vec<Trip> = load_data::load_data().unwrap();
     println!("Loaded {} trips", data.len());
@@ -380,6 +401,7 @@ async fn main() {
         .route("/bebop", get(bebop_serialize_all))
         .route("/capnp", get(capnp_serialize_all))
         .route("/flatbuffers", get(flatbuffer_serialize_all))
+        .route("/avro", get(avro_serialize_all))
         .layer(middleware::from_fn(add_headers))
         .layer(middleware::from_fn(log_request_stats))
         .layer(middleware::from_fn(zstd_if_requested))
