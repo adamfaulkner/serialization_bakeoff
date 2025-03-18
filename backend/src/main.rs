@@ -1,4 +1,3 @@
-use apache_avro::types::Value as AvroValue;
 use axum::{
     body::{Body, BodyDataStream},
     extract::State,
@@ -142,10 +141,26 @@ async fn capnp_serialize_all(state: State<Arc<AppState>>) -> Response {
         trip_builder.set_start_station_id(trip.start_station_id.clone());
         trip_builder.set_end_station_name(trip.end_station_name.clone());
         trip_builder.set_end_station_id(trip.end_station_id.clone());
-        trip_builder.set_start_lat(trip.start_lat.unwrap_or(0.0));
-        trip_builder.set_start_lng(trip.start_lng.unwrap_or(0.0));
-        trip_builder.set_end_lat(trip.end_lat.unwrap_or(0.0));
-        trip_builder.set_end_lng(trip.end_lng.unwrap_or(0.0));
+        if let Some(start_lat) = trip.start_lat {
+            trip_builder.reborrow().get_start_lat().set_lat(start_lat);
+        } else {
+            trip_builder.reborrow().get_start_lat().set_lat_unknown(());
+        }
+        if let Some(start_lng) = trip.start_lng {
+            trip_builder.reborrow().init_start_lng().set_lng(start_lng);
+        } else {
+            trip_builder.reborrow().init_start_lng().set_lng_unknown(());
+        }
+        if let Some(end_lat) = trip.end_lat {
+            trip_builder.reborrow().init_end_lat().set_lat(end_lat);
+        } else {
+            trip_builder.reborrow().init_end_lat().set_lat_unknown(());
+        }
+        if let Some(end_lng) = trip.end_lng {
+            trip_builder.reborrow().init_end_lng().set_lng(end_lng);
+        } else {
+            trip_builder.reborrow().init_end_lng().set_lng_unknown(());
+        }
         trip_builder.set_member_casual(Into::<trip_capnp::MemberCasual>::into(&trip.member_casual));
     }
 

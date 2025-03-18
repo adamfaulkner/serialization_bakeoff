@@ -38,10 +38,10 @@ type Trip = {
   startStationId: string;
   endStationName: string;
   endStationId: string;
-  startLat: number;
-  startLng: number;
-  endLat: number;
-  endLng: number;
+  startLat?: number;
+  startLng?: number;
+  endLat?: number;
+  endLng?: number;
   memberCasual: MemberCasual;
 };
 
@@ -94,9 +94,10 @@ const DESERIALIZERS: Array<Deserializer> = [
           // is not present, but the field is not considered an enumerable property and thus won't
           // be included when we use the spread operator here.
           //
-          // This might be considered technically incorrect, but it's consistent with the behavior
-          // of JSON above.
+          // There are some start_station_names that have empty strings for the name, so we need to
+          // explicitly pull that out.
           ...trip,
+          startStationName: trip.startStationName || "",
           startedAt: new Date(trip.startedAtMs),
           endedAt: new Date(trip.endedAtMs),
         })),
@@ -184,10 +185,10 @@ const DESERIALIZERS: Array<Deserializer> = [
           startStationId: trip.startStationId,
           endStationName: trip.endStationName,
           endStationId: trip.endStationId,
-          startLat: trip.startLat,
-          startLng: trip.startLng,
-          endLat: trip.endLat,
-          endLng: trip.endLng,
+          ...(trip.startLat.which() === 0 ? { startLat: trip.startLat.lat } : {}),
+          ...(trip.startLng.which() === 0 ? { startLng: trip.startLng.lng } : {}),
+          ...(trip.endLat.which() === 0 ? { endLat: trip.endLat.lat } : {}),
+          ...(trip.endLng.which() === 0 ? { endLng: trip.endLng.lng } : {}),
           memberCasual: trip.memberCasual,
         })),
       };
@@ -252,6 +253,21 @@ const DESERIALIZERS: Array<Deserializer> = [
       return schema.decode(Buffer.from(data)).value;
     },
     materializeAsPojo: function (deserialized: any): ServerResponseAll {
+      // The lat and lng values use null to indicate a missing value, while we expect missing
+      for (const trip of deserialized.trips) {
+        if (trip.startLat === null) {
+          delete trip.startLat;
+        }
+        if (trip.startLng === null) {
+          delete trip.startLng;
+        }
+        if (trip.endLat === null) {
+          delete trip.endLat;
+        }
+        if (trip.endLng === null) {
+          delete trip.endLng;
+        }
+      }
       return {
         trips: deserialized.trips.map((trip: any) => ({
           ...trip,
@@ -329,10 +345,10 @@ async function serializePerformanceTests(d: Deserializer): Promise<SerializePerf
     if (typeof trip.rideId !== "string") {
       throw new Error("Trip rideId should be a string");
     }
-    if (trip.startStationName !== undefined && typeof trip.startStationName !== "string") {
+    if (typeof trip.startStationName !== "string") {
       throw new Error("Trip startStationName should be a string");
     }
-    if (!(trip.endLng === null || trip.endLng === undefined || typeof trip.endLng === "number")) {
+    if (!(trip.endLng === undefined || typeof trip.endLng === "number")) {
       throw new Error("Trip endLng should be a number");
     }
     if (!(trip.startedAt instanceof Date)) {

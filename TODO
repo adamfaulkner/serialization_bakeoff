@@ -19,8 +19,15 @@
   - oh, it's just a build dependency of bebop tools. Whatever
 
 
-Future:
-- Graph generation
-- Look more closely at network performance
-- WASM decoder for each format
-- Write up
+3/12
+- [X] Graph generation
+- [X] Look more closely at network performance
+- [X] Write up
+
+3/15
+- [X] Avro
+
+3/18
+- Add data sets
+- Fix handling of optional fields
+- Slim down set of dependencies; take note of impact

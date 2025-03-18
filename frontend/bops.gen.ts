@@ -25,29 +25,29 @@ export const BEBOP_SCHEMA = new Uint8Array ([
 67, 97, 115, 117, 97, 108, 0, 4, 0, 251, 255, 255, 255, 0,
 4, 0, 0, 0, 3, 85, 78, 75, 78, 79, 87, 78, 0, 0, 0, 0, 0,
 0, 77, 69, 77, 66, 69, 82, 0, 0, 1, 0, 0, 0, 67, 65, 83,
-85, 65, 76, 0, 0, 2, 0, 0, 0, 84, 114, 105, 112, 0, 1, 0,
-0, 76, 0, 0, 0, 0, 13, 114, 105, 100, 101, 95, 105, 100,
-0, 245, 255, 255, 255, 0, 114, 105, 100, 101, 97, 98, 108,
-101, 95, 116, 121, 112, 101, 0, 0, 0, 0, 0, 0, 115, 116,
-97, 114, 116, 101, 100, 95, 97, 116, 0, 243, 255, 255,
-255, 0, 101, 110, 100, 101, 100, 95, 97, 116, 0, 243, 255,
-255, 255, 0, 115, 116, 97, 114, 116, 95, 115, 116, 97,
-116, 105, 111, 110, 95, 110, 97, 109, 101, 0, 245, 255,
-255, 255, 0, 115, 116, 97, 114, 116, 95, 115, 116, 97,
-116, 105, 111, 110, 95, 105, 100, 0, 245, 255, 255, 255,
-0, 101, 110, 100, 95, 115, 116, 97, 116, 105, 111, 110,
-95, 110, 97, 109, 101, 0, 245, 255, 255, 255, 0, 101, 110,
+85, 65, 76, 0, 0, 2, 0, 0, 0, 84, 114, 105, 112, 0, 2, 0,
+5, 0, 0, 0, 13, 114, 105, 100, 101, 95, 105, 100, 0, 245,
+255, 255, 255, 0, 1, 114, 105, 100, 101, 97, 98, 108, 101,
+95, 116, 121, 112, 101, 0, 0, 0, 0, 0, 0, 2, 115, 116, 97,
+114, 116, 101, 100, 95, 97, 116, 0, 243, 255, 255, 255, 0,
+3, 101, 110, 100, 101, 100, 95, 97, 116, 0, 243, 255, 255,
+255, 0, 4, 115, 116, 97, 114, 116, 95, 115, 116, 97, 116,
+105, 111, 110, 95, 110, 97, 109, 101, 0, 245, 255, 255,
+255, 0, 5, 115, 116, 97, 114, 116, 95, 115, 116, 97, 116,
+105, 111, 110, 95, 105, 100, 0, 245, 255, 255, 255, 0, 6,
+101, 110, 100, 95, 115, 116, 97, 116, 105, 111, 110, 95,
+110, 97, 109, 101, 0, 245, 255, 255, 255, 0, 7, 101, 110,
 100, 95, 115, 116, 97, 116, 105, 111, 110, 95, 105, 100,
-0, 245, 255, 255, 255, 0, 115, 116, 97, 114, 116, 95, 108,
-97, 116, 0, 246, 255, 255, 255, 0, 115, 116, 97, 114, 116,
-95, 108, 110, 103, 0, 246, 255, 255, 255, 0, 101, 110,
-100, 95, 108, 97, 116, 0, 246, 255, 255, 255, 0, 101, 110,
-100, 95, 108, 110, 103, 0, 246, 255, 255, 255, 0, 109,
-101, 109, 98, 101, 114, 95, 99, 97, 115, 117, 97, 108, 0,
-1, 0, 0, 0, 0, 83, 101, 114, 118, 101, 114, 82, 101, 115,
-112, 111, 110, 115, 101, 65, 108, 108, 0, 2, 0, 5, 0, 0,
-0, 1, 116, 114, 105, 112, 115, 0, 242, 255, 255, 255, 0,
-2, 0, 0, 0, 0, 1, 0, 0, 0, 0
+0, 245, 255, 255, 255, 0, 8, 115, 116, 97, 114, 116, 95,
+108, 97, 116, 0, 246, 255, 255, 255, 0, 9, 115, 116, 97,
+114, 116, 95, 108, 110, 103, 0, 246, 255, 255, 255, 0, 10,
+101, 110, 100, 95, 108, 97, 116, 0, 246, 255, 255, 255, 0,
+11, 101, 110, 100, 95, 108, 110, 103, 0, 246, 255, 255,
+255, 0, 12, 109, 101, 109, 98, 101, 114, 95, 99, 97, 115,
+117, 97, 108, 0, 1, 0, 0, 0, 0, 13, 83, 101, 114, 118,
+101, 114, 82, 101, 115, 112, 111, 110, 115, 101, 65, 108,
+108, 0, 2, 0, 5, 0, 0, 0, 1, 116, 114, 105, 112, 115, 0,
+242, 255, 255, 255, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0
 ]);
 
 export enum RideableType {
@@ -72,47 +72,47 @@ export enum MemberCasual {
 
 export interface ITrip extends BebopRecord {
 
-  readonly rideId: string;
+  rideId?: string;
 
-  readonly rideableType: RideableType;
+  rideableType?: RideableType;
 
-  readonly startedAt: Date;
+  startedAt?: Date;
 
-  readonly endedAt: Date;
+  endedAt?: Date;
 
-  readonly startStationName: string;
+  startStationName?: string;
 
-  readonly startStationId: string;
+  startStationId?: string;
 
-  readonly endStationName: string;
+  endStationName?: string;
 
-  readonly endStationId: string;
+  endStationId?: string;
 
-  readonly startLat: number;
+  startLat?: number;
 
-  readonly startLng: number;
+  startLng?: number;
 
-  readonly endLat: number;
+  endLat?: number;
 
-  readonly endLng: number;
+  endLng?: number;
 
-  readonly memberCasual: MemberCasual;
+  memberCasual?: MemberCasual;
 }
 
 export class Trip implements ITrip {
-  public readonly rideId: string;
-  public readonly rideableType: RideableType;
-  public readonly startedAt: Date;
-  public readonly endedAt: Date;
-  public readonly startStationName: string;
-  public readonly startStationId: string;
-  public readonly endStationName: string;
-  public readonly endStationId: string;
-  public readonly startLat: number;
-  public readonly startLng: number;
-  public readonly endLat: number;
-  public readonly endLng: number;
-  public readonly memberCasual: MemberCasual;
+  public rideId?: string;
+  public rideableType?: RideableType;
+  public startedAt?: Date;
+  public endedAt?: Date;
+  public startStationName?: string;
+  public startStationId?: string;
+  public endStationName?: string;
+  public endStationId?: string;
+  public startLat?: number;
+  public startLng?: number;
+  public endLat?: number;
+  public endLng?: number;
+  public memberCasual?: MemberCasual;
 
   constructor(record: ITrip) {
     this.rideId = record.rideId;
@@ -155,19 +155,45 @@ export class Trip implements ITrip {
    * Validates that the specified dynamic object can become an instance of {@link Trip}.
    */
   public static validateCompatibility(record: ITrip): void {
-    BebopTypeGuard.ensureString(record.rideId)
-    BebopTypeGuard.ensureEnum(record.rideableType, RideableType);
-    BebopTypeGuard.ensureDate(record.startedAt)
-    BebopTypeGuard.ensureDate(record.endedAt)
-    BebopTypeGuard.ensureString(record.startStationName)
-    BebopTypeGuard.ensureString(record.startStationId)
-    BebopTypeGuard.ensureString(record.endStationName)
-    BebopTypeGuard.ensureString(record.endStationId)
-    BebopTypeGuard.ensureFloat(record.startLat)
-    BebopTypeGuard.ensureFloat(record.startLng)
-    BebopTypeGuard.ensureFloat(record.endLat)
-    BebopTypeGuard.ensureFloat(record.endLng)
-    BebopTypeGuard.ensureEnum(record.memberCasual, MemberCasual);
+    if (record.rideId !== undefined) {
+      BebopTypeGuard.ensureString(record.rideId)
+    }
+    if (record.rideableType !== undefined) {
+      BebopTypeGuard.ensureEnum(record.rideableType, RideableType);
+    }
+    if (record.startedAt !== undefined) {
+      BebopTypeGuard.ensureDate(record.startedAt)
+    }
+    if (record.endedAt !== undefined) {
+      BebopTypeGuard.ensureDate(record.endedAt)
+    }
+    if (record.startStationName !== undefined) {
+      BebopTypeGuard.ensureString(record.startStationName)
+    }
+    if (record.startStationId !== undefined) {
+      BebopTypeGuard.ensureString(record.startStationId)
+    }
+    if (record.endStationName !== undefined) {
+      BebopTypeGuard.ensureString(record.endStationName)
+    }
+    if (record.endStationId !== undefined) {
+      BebopTypeGuard.ensureString(record.endStationId)
+    }
+    if (record.startLat !== undefined) {
+      BebopTypeGuard.ensureFloat(record.startLat)
+    }
+    if (record.startLng !== undefined) {
+      BebopTypeGuard.ensureFloat(record.startLng)
+    }
+    if (record.endLat !== undefined) {
+      BebopTypeGuard.ensureFloat(record.endLat)
+    }
+    if (record.endLng !== undefined) {
+      BebopTypeGuard.ensureFloat(record.endLng)
+    }
+    if (record.memberCasual !== undefined) {
+      BebopTypeGuard.ensureEnum(record.memberCasual, MemberCasual);
+    }
   }
 
   /**
@@ -201,19 +227,63 @@ export class Trip implements ITrip {
 
   public static encodeInto(record: ITrip, view: BebopView): number {
     const before = view.length;
-    view.writeString(record.rideId);
-    view.writeUint32(record.rideableType);
-    view.writeDate(record.startedAt);
-    view.writeDate(record.endedAt);
-    view.writeString(record.startStationName);
-    view.writeString(record.startStationId);
-    view.writeString(record.endStationName);
-    view.writeString(record.endStationId);
-    view.writeFloat64(record.startLat);
-    view.writeFloat64(record.startLng);
-    view.writeFloat64(record.endLat);
-    view.writeFloat64(record.endLng);
-    view.writeUint32(record.memberCasual);
+    const pos = view.reserveMessageLength();
+    const start = view.length;
+    if (record.rideId !== undefined) {
+      view.writeByte(1);
+      view.writeString(record.rideId);
+    }
+    if (record.rideableType !== undefined) {
+      view.writeByte(2);
+      view.writeUint32(record.rideableType);
+    }
+    if (record.startedAt !== undefined) {
+      view.writeByte(3);
+      view.writeDate(record.startedAt);
+    }
+    if (record.endedAt !== undefined) {
+      view.writeByte(4);
+      view.writeDate(record.endedAt);
+    }
+    if (record.startStationName !== undefined) {
+      view.writeByte(5);
+      view.writeString(record.startStationName);
+    }
+    if (record.startStationId !== undefined) {
+      view.writeByte(6);
+      view.writeString(record.startStationId);
+    }
+    if (record.endStationName !== undefined) {
+      view.writeByte(7);
+      view.writeString(record.endStationName);
+    }
+    if (record.endStationId !== undefined) {
+      view.writeByte(8);
+      view.writeString(record.endStationId);
+    }
+    if (record.startLat !== undefined) {
+      view.writeByte(9);
+      view.writeFloat64(record.startLat);
+    }
+    if (record.startLng !== undefined) {
+      view.writeByte(10);
+      view.writeFloat64(record.startLng);
+    }
+    if (record.endLat !== undefined) {
+      view.writeByte(11);
+      view.writeFloat64(record.endLat);
+    }
+    if (record.endLng !== undefined) {
+      view.writeByte(12);
+      view.writeFloat64(record.endLng);
+    }
+    if (record.memberCasual !== undefined) {
+      view.writeByte(13);
+      view.writeUint32(record.memberCasual);
+    }
+    view.writeByte(0);
+    const end = view.length;
+    view.fillMessageLength(pos, end - start);
     const after = view.length;
     return after - before;
   }
@@ -225,48 +295,71 @@ export class Trip implements ITrip {
   }
 
   public static readFrom(view: BebopView): ITrip {
-    let field0: string;
-    field0 = view.readString();
-    let field1: RideableType;
-    field1 = view.readUint32() as RideableType;
-    let field2: Date;
-    field2 = view.readDate();
-    let field3: Date;
-    field3 = view.readDate();
-    let field4: string;
-    field4 = view.readString();
-    let field5: string;
-    field5 = view.readString();
-    let field6: string;
-    field6 = view.readString();
-    let field7: string;
-    field7 = view.readString();
-    let field8: number;
-    field8 = view.readFloat64();
-    let field9: number;
-    field9 = view.readFloat64();
-    let field10: number;
-    field10 = view.readFloat64();
-    let field11: number;
-    field11 = view.readFloat64();
-    let field12: MemberCasual;
-    field12 = view.readUint32() as MemberCasual;
-    let message: ITrip = {
-      rideId: field0,
-      rideableType: field1,
-      startedAt: field2,
-      endedAt: field3,
-      startStationName: field4,
-      startStationId: field5,
-      endStationName: field6,
-      endStationId: field7,
-      startLat: field8,
-      startLng: field9,
-      endLat: field10,
-      endLng: field11,
-      memberCasual: field12,
-    };
-    return new Trip(message);
+    let message: ITrip = {};
+    const length = view.readMessageLength();
+    const end = view.index + length;
+    while (true) {
+      switch (view.readByte()) {
+        case 0:
+          return new Trip(message);
+
+        case 1:
+          message.rideId = view.readString();
+          break;
+
+        case 2:
+          message.rideableType = view.readUint32() as RideableType;
+          break;
+
+        case 3:
+          message.startedAt = view.readDate();
+          break;
+
+        case 4:
+          message.endedAt = view.readDate();
+          break;
+
+        case 5:
+          message.startStationName = view.readString();
+          break;
+
+        case 6:
+          message.startStationId = view.readString();
+          break;
+
+        case 7:
+          message.endStationName = view.readString();
+          break;
+
+        case 8:
+          message.endStationId = view.readString();
+          break;
+
+        case 9:
+          message.startLat = view.readFloat64();
+          break;
+
+        case 10:
+          message.startLng = view.readFloat64();
+          break;
+
+        case 11:
+          message.endLat = view.readFloat64();
+          break;
+
+        case 12:
+          message.endLng = view.readFloat64();
+          break;
+
+        case 13:
+          message.memberCasual = view.readUint32() as MemberCasual;
+          break;
+
+        default:
+          view.index = end;
+          return new Trip(message);
+      }
+    }
   }
 }
 

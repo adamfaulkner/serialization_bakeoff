@@ -129,17 +129,6 @@ where
     serializer.serialize_i64(date.timestamp_millis())
 }
 
-// TODO: This is dumb, we should represent the optional field in the schema correctly across the board.
-fn serialize_optional_double<S>(value: &Option<f64>, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    match value {
-        Some(v) => serializer.serialize_f64(*v),
-        None => serializer.serialize_f64(0.0),
-    }
-}
-
 // The header row of the csv is:
 // "ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -161,13 +150,13 @@ pub struct Trip {
     pub start_station_id: String,
     pub end_station_name: String,
     pub end_station_id: String,
-    #[serde(serialize_with = "serialize_optional_double")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub start_lat: Option<f64>,
-    #[serde(serialize_with = "serialize_optional_double")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub start_lng: Option<f64>,
-    #[serde(serialize_with = "serialize_optional_double")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub end_lat: Option<f64>,
-    #[serde(serialize_with = "serialize_optional_double")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub end_lng: Option<f64>,
     pub member_casual: MemberCasual,
 }
@@ -183,10 +172,10 @@ impl From<&Trip> for trip_protobuf::Trip {
             start_station_id: trip.start_station_id.clone(),
             end_station_name: trip.end_station_name.clone(),
             end_station_id: trip.end_station_id.clone(),
-            start_lat: trip.start_lat.unwrap_or(0.0),
-            start_lng: trip.start_lng.unwrap_or(0.0),
-            end_lat: trip.end_lat.unwrap_or(0.0),
-            end_lng: trip.end_lng.unwrap_or(0.0),
+            start_lat: trip.start_lat,
+            start_lng: trip.start_lng,
+            end_lat: trip.end_lat,
+            end_lng: trip.end_lng,
             member_casual: Into::<trip_protobuf::MemberCasual>::into(&trip.member_casual).into(),
         }
     }
@@ -195,38 +184,29 @@ impl From<&Trip> for trip_protobuf::Trip {
 impl<'a> From<&'a Trip> for bebop_trip::Trip<'a> {
     fn from(trip: &'a Trip) -> Self {
         bebop_trip::Trip {
-            ride_id: &trip.ride_id,
-            rideable_type: Into::<bebop_trip::RideableType>::into(&trip.rideable_type),
-            started_at: bebop::Date::from_millis_since_unix_epoch(
+            ride_id: Some(&trip.ride_id),
+            rideable_type: Some(Into::<bebop_trip::RideableType>::into(&trip.rideable_type)),
+            started_at: Some(bebop::Date::from_millis_since_unix_epoch(
                 trip.started_at.timestamp_millis() as u64,
-            ),
-            ended_at: bebop::Date::from_millis_since_unix_epoch(
-                trip.ended_at.timestamp_millis() as u64
-            ),
-            start_station_name: &trip.start_station_name,
-            start_station_id: &trip.start_station_id,
-            end_station_name: &trip.end_station_name,
-            end_station_id: &trip.end_station_id,
-            start_lat: trip.start_lat.unwrap_or(0.0),
-            start_lng: trip.start_lng.unwrap_or(0.0),
-            end_lat: trip.end_lat.unwrap_or(0.0),
-            end_lng: trip.end_lng.unwrap_or(0.0),
-            member_casual: Into::<bebop_trip::MemberCasual>::into(&trip.member_casual),
+            )),
+            ended_at: Some(bebop::Date::from_millis_since_unix_epoch(
+                trip.ended_at.timestamp_millis() as u64,
+            )),
+            start_station_name: Some(&trip.start_station_name),
+            start_station_id: Some(&trip.start_station_id),
+            end_station_name: Some(&trip.end_station_name),
+            end_station_id: Some(&trip.end_station_id),
+            start_lat: trip.start_lat,
+            start_lng: trip.start_lng,
+            end_lat: trip.end_lat,
+            end_lng: trip.end_lng,
+            member_casual: Some(Into::<bebop_trip::MemberCasual>::into(&trip.member_casual)),
         }
     }
 }
 
 impl From<&Trip> for AvroValue {
     fn from(trip: &Trip) -> Self {
-        /*
-        let schema_str = fs::read_to_string("../schemas/trip.avsc").unwrap();
-        let mut writer = avro_rs::Writer::new(
-            &avro_rs::Schema::parse_str(
-                schema_str.as_str()
-            )?,
-            Vec::new(),
-        );
-        */
         AvroValue::Record(vec![
             (
                 "ride_id".to_string(),

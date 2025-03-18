@@ -12,20 +12,20 @@ enum MemberCasual {
 
 // The header row of the csv is:
 // "ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
-struct Trip {
-    string ride_id;
-    RideableType rideable_type;
-    date started_at;
-    date ended_at;
-    string start_station_name;
-    string start_station_id;
-    string end_station_name;
-    string end_station_id;
-    float64 start_lat;
-    float64 start_lng;
-    float64 end_lat;
-    float64 end_lng;
-    MemberCasual member_casual;
+message Trip {
+    1 -> string ride_id;
+    2 -> RideableType rideable_type;
+    3 -> date started_at;
+    4 -> date ended_at;
+    5 -> string start_station_name;
+    6 -> string start_station_id;
+    7 -> string end_station_name;
+    8 -> string end_station_id;
+    9 -> float64 start_lat;
+    10 -> float64 start_lng;
+    11 -> float64 end_lat;
+    12 -> float64 end_lng;
+    13 -> MemberCasual member_casual;
 }
 
 message ServerResponseAll {

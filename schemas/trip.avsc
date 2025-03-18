@@ -51,19 +51,19 @@
                         },
                         {
                             "name": "startLat",
-                            "type": "double"
+                            "type": ["double", "null"]
                         },
                         {
                             "name": "startLng",
-                            "type": "double"
+                            "type": ["double", "null"]
                         },
                         {
                             "name": "endLat",
-                            "type": "double"
+                            "type": ["double", "null"]
                         },
                         {
                             "name": "endLng",
-                            "type": "double"
+                            "type": ["double", "null"]
                         },
                         {
                             "name": "memberCasual",

@@ -23,11 +23,23 @@ struct Trip {
     startStationId @5 :Text;
     endStationName @6 :Text;
     endStationId @7 :Text;
-    startLat @8 :Float64;
-    startLng @9 :Float64;
-    endLat @10 :Float64;
-    endLng @11 :Float64;
-    memberCasual @12 :MemberCasual;
+    startLat :union {
+     lat @8 :Float64;
+     latUnknown @9 :Void;
+    }
+    startLng :union {
+     lng @10 :Float64;
+     lngUnknown @11 :Void;
+    }
+    endLat :union {
+     lat @12 :Float64;
+     latUnknown @13 :Void;
+    }
+    endLng :union {
+     lng @14 :Float64;
+     lngUnknown @15 :Void;
+    }
+    memberCasual @16 :MemberCasual;
 }
 
 struct ServerResponseAll {
