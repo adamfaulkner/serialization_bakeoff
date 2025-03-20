@@ -35,19 +35,19 @@
                         },
                         {
                             "name": "startStationName",
-                            "type": "string"
+                            "type": ["string", "null"]
                         },
                         {
                             "name": "startStationId",
-                            "type": "string"
+                            "type": ["string", "null"]
                         },
                         {
                             "name": "endStationName",
-                            "type": "string"
+                            "type": ["string", "null"]
                         },
                         {
                             "name": "endStationId",
-                            "type": "string"
+                            "type": ["string", "null"]
                         },
                         {
                             "name": "startLat",

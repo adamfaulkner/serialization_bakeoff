@@ -26,7 +26,8 @@
     "path": "^0.12.7",
     "protobufjs": "^7.4.0",
     "stream": "^0.0.3",
-    "util": "^0.12.5"
+    "util": "^0.12.5",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "capnpc-ts": "^0.7.0",

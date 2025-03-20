@@ -11,155 +11,11 @@ export const MemberCasual = {
   MEMBER: 1,
   CASUAL: 2
 };
-export const Trip_StartLat_Which = {
-  LAT: 0,
-  LAT_UNKNOWN: 1
-};
-export class Trip_StartLat extends $.Struct {
-  static LAT = Trip_StartLat_Which.LAT;
-  static LAT_UNKNOWN = Trip_StartLat_Which.LAT_UNKNOWN;
-  static _capnp = {
-    displayName: "startLat",
-    id: "a9b926edf6223cbd",
-    size: new $.ObjectSize(64, 5)
-  };
-  get lat() {
-    $.utils.testWhich("lat", $.utils.getUint16(2, this), 0, this);
-    return $.utils.getFloat64(24, this);
-  }
-  get _isLat() {
-    return $.utils.getUint16(2, this) === 0;
-  }
-  set lat(value) {
-    $.utils.setUint16(2, 0, this);
-    $.utils.setFloat64(24, value, this);
-  }
-  get _isLatUnknown() {
-    return $.utils.getUint16(2, this) === 1;
-  }
-  set latUnknown(_) {
-    $.utils.setUint16(2, 1, this);
-  }
-  toString() {
-    return "Trip_StartLat_" + super.toString();
-  }
-  which() {
-    return $.utils.getUint16(2, this);
-  }
-}
-export const Trip_StartLng_Which = {
-  LNG: 0,
-  LNG_UNKNOWN: 1
-};
-export class Trip_StartLng extends $.Struct {
-  static LNG = Trip_StartLng_Which.LNG;
-  static LNG_UNKNOWN = Trip_StartLng_Which.LNG_UNKNOWN;
-  static _capnp = {
-    displayName: "startLng",
-    id: "f040d65e31b0d42e",
-    size: new $.ObjectSize(64, 5)
-  };
-  get lng() {
-    $.utils.testWhich("lng", $.utils.getUint16(4, this), 0, this);
-    return $.utils.getFloat64(32, this);
-  }
-  get _isLng() {
-    return $.utils.getUint16(4, this) === 0;
-  }
-  set lng(value) {
-    $.utils.setUint16(4, 0, this);
-    $.utils.setFloat64(32, value, this);
-  }
-  get _isLngUnknown() {
-    return $.utils.getUint16(4, this) === 1;
-  }
-  set lngUnknown(_) {
-    $.utils.setUint16(4, 1, this);
-  }
-  toString() {
-    return "Trip_StartLng_" + super.toString();
-  }
-  which() {
-    return $.utils.getUint16(4, this);
-  }
-}
-export const Trip_EndLat_Which = {
-  LAT: 0,
-  LAT_UNKNOWN: 1
-};
-export class Trip_EndLat extends $.Struct {
-  static LAT = Trip_EndLat_Which.LAT;
-  static LAT_UNKNOWN = Trip_EndLat_Which.LAT_UNKNOWN;
-  static _capnp = {
-    displayName: "endLat",
-    id: "ea2fa7279810747e",
-    size: new $.ObjectSize(64, 5)
-  };
-  get lat() {
-    $.utils.testWhich("lat", $.utils.getUint16(6, this), 0, this);
-    return $.utils.getFloat64(40, this);
-  }
-  get _isLat() {
-    return $.utils.getUint16(6, this) === 0;
-  }
-  set lat(value) {
-    $.utils.setUint16(6, 0, this);
-    $.utils.setFloat64(40, value, this);
-  }
-  get _isLatUnknown() {
-    return $.utils.getUint16(6, this) === 1;
-  }
-  set latUnknown(_) {
-    $.utils.setUint16(6, 1, this);
-  }
-  toString() {
-    return "Trip_EndLat_" + super.toString();
-  }
-  which() {
-    return $.utils.getUint16(6, this);
-  }
-}
-export const Trip_EndLng_Which = {
-  LNG: 0,
-  LNG_UNKNOWN: 1
-};
-export class Trip_EndLng extends $.Struct {
-  static LNG = Trip_EndLng_Which.LNG;
-  static LNG_UNKNOWN = Trip_EndLng_Which.LNG_UNKNOWN;
-  static _capnp = {
-    displayName: "endLng",
-    id: "964ea29820ce2ccd",
-    size: new $.ObjectSize(64, 5)
-  };
-  get lng() {
-    $.utils.testWhich("lng", $.utils.getUint16(56, this), 0, this);
-    return $.utils.getFloat64(48, this);
-  }
-  get _isLng() {
-    return $.utils.getUint16(56, this) === 0;
-  }
-  set lng(value) {
-    $.utils.setUint16(56, 0, this);
-    $.utils.setFloat64(48, value, this);
-  }
-  get _isLngUnknown() {
-    return $.utils.getUint16(56, this) === 1;
-  }
-  set lngUnknown(_) {
-    $.utils.setUint16(56, 1, this);
-  }
-  toString() {
-    return "Trip_EndLng_" + super.toString();
-  }
-  which() {
-    return $.utils.getUint16(56, this);
-  }
-}
 export class Trip extends $.Struct {
   static _capnp = {
     displayName: "Trip",
     id: "923fdeee6e7a9a4d",
-    size: new $.ObjectSize(64, 5)
+    size: new $.ObjectSize(56, 5)
   };
   get rideId() {
     return $.utils.getText(0, this);
@@ -210,34 +66,34 @@ export class Trip extends $.Struct {
     $.utils.setText(4, value, this);
   }
   get startLat() {
-    return $.utils.getAs(Trip_StartLat, this);
+    return $.utils.getFloat64(24, this);
   }
-  _initStartLat() {
-    return $.utils.getAs(Trip_StartLat, this);
+  set startLat(value) {
+    $.utils.setFloat64(24, value, this);
   }
   get startLng() {
-    return $.utils.getAs(Trip_StartLng, this);
+    return $.utils.getFloat64(32, this);
   }
-  _initStartLng() {
-    return $.utils.getAs(Trip_StartLng, this);
+  set startLng(value) {
+    $.utils.setFloat64(32, value, this);
   }
   get endLat() {
-    return $.utils.getAs(Trip_EndLat, this);
+    return $.utils.getFloat64(40, this);
   }
-  _initEndLat() {
-    return $.utils.getAs(Trip_EndLat, this);
+  set endLat(value) {
+    $.utils.setFloat64(40, value, this);
   }
   get endLng() {
-    return $.utils.getAs(Trip_EndLng, this);
+    return $.utils.getFloat64(48, this);
   }
-  _initEndLng() {
-    return $.utils.getAs(Trip_EndLng, this);
+  set endLng(value) {
+    $.utils.setFloat64(48, value, this);
   }
   get memberCasual() {
-    return $.utils.getUint16(58, this);
+    return $.utils.getUint16(2, this);
   }
   set memberCasual(value) {
-    $.utils.setUint16(58, value, this);
+    $.utils.setUint16(2, value, this);
   }
   toString() {
     return "Trip_" + super.toString();

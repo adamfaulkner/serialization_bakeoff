@@ -127,10 +127,14 @@ pub struct Trip {
         serialize_with = "serialize_datetime_to_number_ms"
     )]
     pub ended_at: DateTime<Utc>,
-    pub start_station_name: String,
-    pub start_station_id: String,
-    pub end_station_name: String,
-    pub end_station_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub start_station_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub start_station_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end_station_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end_station_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub start_lat: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -173,10 +177,10 @@ impl<'a> From<&'a Trip> for bebop_trip::Trip<'a> {
             ended_at: Some(bebop::Date::from_millis_since_unix_epoch(
                 trip.ended_at.timestamp_millis() as u64,
             )),
-            start_station_name: Some(&trip.start_station_name),
-            start_station_id: Some(&trip.start_station_id),
-            end_station_name: Some(&trip.end_station_name),
-            end_station_id: Some(&trip.end_station_id),
+            start_station_name: trip.start_station_name.as_deref(),
+            start_station_id: trip.start_station_id.as_deref(),
+            end_station_name: trip.end_station_name.as_deref(),
+            end_station_id: trip.end_station_id.as_deref(),
             start_lat: trip.start_lat,
             start_lng: trip.start_lng,
             end_lat: trip.end_lat,

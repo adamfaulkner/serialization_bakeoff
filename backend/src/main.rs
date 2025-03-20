@@ -137,10 +137,18 @@ async fn capnp_serialize_all(state: State<Arc<AppState>>) -> Response {
         trip_builder.set_rideable_type(rt);
         trip_builder.set_started_at_ms(trip.started_at.timestamp_millis());
         trip_builder.set_ended_at_ms(trip.ended_at.timestamp_millis());
-        trip_builder.set_start_station_name(trip.start_station_name.clone());
-        trip_builder.set_start_station_id(trip.start_station_id.clone());
-        trip_builder.set_end_station_name(trip.end_station_name.clone());
-        trip_builder.set_end_station_id(trip.end_station_id.clone());
+        trip.start_station_name.as_ref().map(|start_station_name| {
+            trip_builder.set_start_station_name(start_station_name);
+        });
+        trip.start_station_id.as_ref().map(|start_station_id| {
+            trip_builder.set_start_station_id(start_station_id);
+        });
+        trip.end_station_name.as_ref().map(|end_station_name| {
+            trip_builder.set_end_station_name(end_station_name);
+        });
+        trip.end_station_id.as_ref().map(|end_station_id| {
+            trip_builder.set_end_station_id(end_station_id);
+        });
         if let Some(start_lat) = trip.start_lat {
             trip_builder.reborrow().get_start_lat().set_lat(start_lat);
         } else {
@@ -179,10 +187,22 @@ async fn flatbuffer_serialize_all(state: State<Arc<AppState>>) -> Response {
     let mut fbb = flatbuffers::FlatBufferBuilder::new();
     let mut trip_offsets = Vec::with_capacity(state.data.len());
     for trip in state.data.iter() {
-        let start_station_id = fbb.create_string(&trip.start_station_id);
-        let end_station_id = fbb.create_string(&trip.end_station_id);
-        let start_station_name = fbb.create_string(&trip.start_station_name);
-        let end_station_name = fbb.create_string(&trip.end_station_name);
+        let start_station_id = trip
+            .start_station_id
+            .as_ref()
+            .map(|id| fbb.create_string(&id));
+        let end_station_id = trip
+            .end_station_id
+            .as_ref()
+            .map(|id| fbb.create_string(&id));
+        let start_station_name = trip
+            .start_station_name
+            .as_ref()
+            .map(|name| fbb.create_string(&name));
+        let end_station_name = trip
+            .end_station_name
+            .as_ref()
+            .map(|name| fbb.create_string(&name));
         let ride_id = fbb.create_string(&trip.ride_id);
         let trip_offset = {
             let mut trip_builder = trip_flatbuffer::trip::TripBuilder::new(&mut fbb);
@@ -190,10 +210,10 @@ async fn flatbuffer_serialize_all(state: State<Arc<AppState>>) -> Response {
             trip_builder.add_rideable_type((&trip.rideable_type).into());
             trip_builder.add_started_at_ms(trip.started_at.timestamp_millis());
             trip_builder.add_ended_at_ms(trip.ended_at.timestamp_millis());
-            trip_builder.add_start_station_id(start_station_id);
-            trip_builder.add_end_station_id(end_station_id);
-            trip_builder.add_start_station_name(start_station_name);
-            trip_builder.add_end_station_name(end_station_name);
+            start_station_id.map(|id| trip_builder.add_start_station_id(id));
+            end_station_id.map(|id| trip_builder.add_end_station_id(id));
+            start_station_name.map(|name| trip_builder.add_start_station_name(name));
+            end_station_name.map(|name| trip_builder.add_end_station_name(name));
             trip_builder.add_start_lat(trip.start_lat.unwrap_or(0.0));
             trip_builder.add_start_lng(trip.start_lng.unwrap_or(0.0));
             trip_builder.add_end_lat(trip.end_lat.unwrap_or(0.0));

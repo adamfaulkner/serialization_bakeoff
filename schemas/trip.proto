@@ -3,35 +3,33 @@ syntax = "proto3";
 package trip_protobuf;
 
 enum RideableType {
-  UNKNOWN_RIDEABLE_TYPE = 0;
-  ELECTRIC_BIKE = 1;
-  CLASSIC_BIKE = 2;
+  unknown_rideable_type = 0;
+  electric_bike = 1;
+  classic_bike = 2;
 }
 
 enum MemberCasual {
-  UNKNOWN_MEMBER_CASUAL = 0;
-  MEMBER = 1;
-  CASUAL = 2;
+  unknown_member_casual = 0;
+  member = 1;
+  casual = 2;
 }
 
 // The header row of the csv is:
 // "ride_id","rideable_type","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng","member_casual"
 message Trip {
-    string ride_id = 1;
-    RideableType rideable_type = 2;
-    int64 started_at_ms = 3;
-    int64 ended_at_ms = 4;
-    string start_station_name = 5;
-    string start_station_id = 6;
-    string end_station_name = 7;
-    string end_station_id = 8;
-    optional double start_lat = 9;
-    optional double start_lng = 10;
-    optional double end_lat = 11;
-    optional double end_lng = 12;
-    MemberCasual member_casual = 13;
+  string ride_id = 1;
+  RideableType rideable_type = 2;
+  int64 started_at_ms = 3;
+  int64 ended_at_ms = 4;
+  optional string start_station_name = 5;
+  optional string start_station_id = 6;
+  optional string end_station_name = 7;
+  optional string end_station_id = 8;
+  optional double start_lat = 9;
+  optional double start_lng = 10;
+  optional double end_lat = 11;
+  optional double end_lng = 12;
+  MemberCasual member_casual = 13;
 }
 
-message ServerResponseAll {
-    repeated Trip trips = 1;
-}
+message ServerResponseAll { repeated Trip trips = 1; }

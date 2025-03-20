@@ -12,90 +12,6 @@ export declare const MemberCasual: {
   readonly CASUAL: 2;
 };
 export type MemberCasual = (typeof MemberCasual)[keyof typeof MemberCasual];
-export declare const Trip_StartLat_Which: {
-  readonly LAT: 0;
-  readonly LAT_UNKNOWN: 1;
-};
-export type Trip_StartLat_Which = (typeof Trip_StartLat_Which)[keyof typeof Trip_StartLat_Which];
-export declare class Trip_StartLat extends $.Struct {
-  static readonly LAT: 0;
-  static readonly LAT_UNKNOWN: 1;
-  static readonly _capnp: {
-    displayName: string;
-    id: string;
-    size: $.ObjectSize;
-  };
-  get lat(): number;
-  get _isLat(): boolean;
-  set lat(value: number);
-  get _isLatUnknown(): boolean;
-  set latUnknown(_: true);
-  toString(): string;
-  which(): Trip_StartLat_Which;
-}
-export declare const Trip_StartLng_Which: {
-  readonly LNG: 0;
-  readonly LNG_UNKNOWN: 1;
-};
-export type Trip_StartLng_Which = (typeof Trip_StartLng_Which)[keyof typeof Trip_StartLng_Which];
-export declare class Trip_StartLng extends $.Struct {
-  static readonly LNG: 0;
-  static readonly LNG_UNKNOWN: 1;
-  static readonly _capnp: {
-    displayName: string;
-    id: string;
-    size: $.ObjectSize;
-  };
-  get lng(): number;
-  get _isLng(): boolean;
-  set lng(value: number);
-  get _isLngUnknown(): boolean;
-  set lngUnknown(_: true);
-  toString(): string;
-  which(): Trip_StartLng_Which;
-}
-export declare const Trip_EndLat_Which: {
-  readonly LAT: 0;
-  readonly LAT_UNKNOWN: 1;
-};
-export type Trip_EndLat_Which = (typeof Trip_EndLat_Which)[keyof typeof Trip_EndLat_Which];
-export declare class Trip_EndLat extends $.Struct {
-  static readonly LAT: 0;
-  static readonly LAT_UNKNOWN: 1;
-  static readonly _capnp: {
-    displayName: string;
-    id: string;
-    size: $.ObjectSize;
-  };
-  get lat(): number;
-  get _isLat(): boolean;
-  set lat(value: number);
-  get _isLatUnknown(): boolean;
-  set latUnknown(_: true);
-  toString(): string;
-  which(): Trip_EndLat_Which;
-}
-export declare const Trip_EndLng_Which: {
-  readonly LNG: 0;
-  readonly LNG_UNKNOWN: 1;
-};
-export type Trip_EndLng_Which = (typeof Trip_EndLng_Which)[keyof typeof Trip_EndLng_Which];
-export declare class Trip_EndLng extends $.Struct {
-  static readonly LNG: 0;
-  static readonly LNG_UNKNOWN: 1;
-  static readonly _capnp: {
-    displayName: string;
-    id: string;
-    size: $.ObjectSize;
-  };
-  get lng(): number;
-  get _isLng(): boolean;
-  set lng(value: number);
-  get _isLngUnknown(): boolean;
-  set lngUnknown(_: true);
-  toString(): string;
-  which(): Trip_EndLng_Which;
-}
 export declare class Trip extends $.Struct {
   static readonly _capnp: {
     displayName: string;
@@ -118,14 +34,14 @@ export declare class Trip extends $.Struct {
   set endStationName(value: string);
   get endStationId(): string;
   set endStationId(value: string);
-  get startLat(): Trip_StartLat;
-  _initStartLat(): Trip_StartLat;
-  get startLng(): Trip_StartLng;
-  _initStartLng(): Trip_StartLng;
-  get endLat(): Trip_EndLat;
-  _initEndLat(): Trip_EndLat;
-  get endLng(): Trip_EndLng;
-  _initEndLng(): Trip_EndLng;
+  get startLat(): number;
+  set startLat(value: number);
+  get startLng(): number;
+  set startLng(value: number);
+  get endLat(): number;
+  set endLat(value: number);
+  get endLng(): number;
+  set endLng(value: number);
   get memberCasual(): MemberCasual;
   set memberCasual(value: MemberCasual);
   toString(): string;
