@@ -28,6 +28,12 @@
 - [X] Avro
 
 3/18
+- [X] Fix handling of optional fields
+
+3/20
 - Add data sets
-- Fix handling of optional fields
+- Add schema checking after deserialization
 - Slim down set of dependencies; take note of impact
+    - Before slimming: 2.3GB rust analyzer
+    - After slimming: 2.2GB rust analyzer :(
+    - Reqwest is huge and is a build dependency of bebop tools. We could easily eliminate it at the cost of needing additional setup.
