@@ -1,13 +1,13 @@
 import { z } from "zod";
 
 export enum RideableType {
-  electric = "electric_bike",
-  classic = "classic_bike",
+  electric = 1,
+  classic = 2,
 }
 
 export enum MemberCasual {
-  member = "member",
-  casual = "casual",
+  member = 1,
+  casual = 2,
 }
 
 // This is the same trip that we use on the backend.

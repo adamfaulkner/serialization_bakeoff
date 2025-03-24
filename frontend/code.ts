@@ -13,7 +13,9 @@ import { Chart } from "chart.js/auto";
 import { MemberCasual, RideableType, Trip, tripSchema } from "./trip.js";
 
 const response = await protobufjs.load("./dist/trip.proto");
-const ServerResponseAllProtobuf = response.lookupType("trip_protobuf.ServerResponseAll");
+const ServerResponseAllProtobuf = response.lookupType(
+  "trip_protobuf.ServerResponseAll",
+);
 const TripProtobuf = response.lookupType("trip_protobuf.Trip");
 
 const avroSchema = await (await fetch("./dist/avro_schema.json")).text();
@@ -37,11 +39,19 @@ const DESERIALIZERS: Array<Deserializer> = [
       const decoder = new TextDecoder();
       return JSON.parse(decoder.decode(data));
     },
-    materializeAsPojo: (deserialized: any) => {
+    materializeAsPojo: (deserialized: any): ServerResponseAll => {
       // The JSON dates are represented as strings.
       return {
         trips: deserialized.trips.map((trip: any) => ({
           ...trip,
+          rideableType:
+            trip.rideableType === "classic_bike"
+              ? RideableType.classic
+              : RideableType.electric,
+          memberCasual:
+            trip.memberCasual === "member"
+              ? MemberCasual.member
+              : MemberCasual.casual,
           startedAt: new Date(trip.startedAt),
           endedAt: new Date(trip.endedAt),
         })),
@@ -63,16 +73,9 @@ const DESERIALIZERS: Array<Deserializer> = [
 
       return {
         trips: deserialized.trips.map((trip: any) => {
-          const asObject = TripProtobuf.toObject(trip, { enums: String });
+          const asObject = TripProtobuf.toObject(trip);
           return {
-            // The accessor on the trip will provide the default value when queried for a field that
-            // is not present, but the field is not considered an enumerable property and thus won't
-            // be included when we use the spread operator here.
-            //
-            // There are some start_station_names that have empty strings for the name, so we need to
-            // explicitly pull that out.
             ...asObject,
-            //startStationName: trip.startStationName || "",
             startedAt: new Date(asObject.startedAtMs),
             endedAt: new Date(asObject.endedAtMs),
           };
@@ -95,8 +98,16 @@ const DESERIALIZERS: Array<Deserializer> = [
       return {
         trips: deserialized.trips.map((trip: any) => ({
           ...trip,
+          rideableType:
+            trip.rideableType === "classic_bike"
+              ? RideableType.classic
+              : RideableType.electric,
           startedAt: new Date(Number(trip.startedAt)),
           endedAt: new Date(Number(trip.endedAt)),
+          memberCasual:
+            trip.memberCasual === "member"
+              ? MemberCasual.member
+              : MemberCasual.casual,
         })),
       };
     },
@@ -117,6 +128,14 @@ const DESERIALIZERS: Array<Deserializer> = [
           ...trip,
           startedAt: new Date(Number(trip.startedAt)),
           endedAt: new Date(Number(trip.endedAt)),
+          rideableType:
+            trip.rideableType === "classic_bike"
+              ? RideableType.classic
+              : RideableType.electric,
+          memberCasual:
+            trip.memberCasual === "member"
+              ? MemberCasual.member
+              : MemberCasual.casual,
         })),
       };
     },
@@ -131,14 +150,7 @@ const DESERIALIZERS: Array<Deserializer> = [
       return ServerResponseAllBebop.decode(data);
     },
     materializeAsPojo: (deserialized: any): ServerResponseAll => {
-      // bebop enums don't have a decent way to convert back to strings, so we do this. This seems like a significant flaw in bebop?
-      return {
-        trips: deserialized.trips.map((trip: any) => ({
-          ...trip,
-          memberCasual: trip.memberCasual === 1 ? "member" : "casual",
-          rideableType: trip.rideableType === 1 ? "classic_bike" : "electric_bike",
-        })),
-      };
+      return deserialized;
     },
     scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
       const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
@@ -159,18 +171,26 @@ const DESERIALIZERS: Array<Deserializer> = [
       return {
         trips: deserialized.trips.map((trip: any) => ({
           rideId: trip.rideId,
-          rideableType: trip.rideableType === 1 ? "classic_bike" : "electric_bike",
+          rideableType: trip.rideableType,
           startedAt: new Date(Number(trip.startedAtMs)),
           endedAt: new Date(Number(trip.endedAtMs)),
-          ...(trip.startStationName !== "" ? { startStationName: trip.startStationName } : {}),
-          ...(trip.startStationId !== "" ? { startStationId: trip.startStationId } : {}),
-          ...(trip.endStationName !== "" ? { endStationName: trip.endStationName } : {}),
-          ...(trip.endStationId !== "" ? { endStationId: trip.endStationId } : {}),
+          ...(trip.startStationName !== ""
+            ? { startStationName: trip.startStationName }
+            : {}),
+          ...(trip.startStationId !== ""
+            ? { startStationId: trip.startStationId }
+            : {}),
+          ...(trip.endStationName !== ""
+            ? { endStationName: trip.endStationName }
+            : {}),
+          ...(trip.endStationId !== ""
+            ? { endStationId: trip.endStationId }
+            : {}),
           ...(trip.startLat !== 0 ? { startLat: trip.startLat.lat } : {}),
           ...(trip.startLng !== 0 ? { startLng: trip.startLng.lng } : {}),
           ...(trip.endLat !== 0 ? { endLat: trip.endLat.lat } : {}),
           ...(trip.endLng !== 0 ? { endLng: trip.endLng.lng } : {}),
-          memberCasual: trip.memberCasual === 1 ? "member" : "casual",
+          memberCasual: trip.memberCasual,
         })),
       };
     },
@@ -195,20 +215,26 @@ const DESERIALIZERS: Array<Deserializer> = [
         const trip = deserialized.trips(i);
         trips.push({
           rideId: trip.rideId(),
-          rideableType: trip.rideableType() === 1 ? RideableType.classic : RideableType.electric,
+          rideableType: trip.rideableType(),
           startedAt: new Date(Number(trip.startedAtMs())),
           endedAt: new Date(Number(trip.endedAtMs())),
           ...(trip.startStationName() !== null
             ? { startStationName: trip.startStationName() }
             : {}),
-          ...(trip.startStationId() !== null ? { startStationId: trip.startStationId() } : {}),
-          ...(trip.endStationId() !== null ? { endStationId: trip.endStationId() } : {}),
-          ...(trip.endStationName() !== null ? { endStationName: trip.endStationName() } : {}),
+          ...(trip.startStationId() !== null
+            ? { startStationId: trip.startStationId() }
+            : {}),
+          ...(trip.endStationId() !== null
+            ? { endStationId: trip.endStationId() }
+            : {}),
+          ...(trip.endStationName() !== null
+            ? { endStationName: trip.endStationName() }
+            : {}),
           startLat: trip.startLat(),
           startLng: trip.startLng(),
           endLat: trip.endLat(),
           endLng: trip.endLng(),
-          memberCasual: trip.memberCasual() === 1 ? MemberCasual.member : MemberCasual.casual,
+          memberCasual: trip.memberCasual(),
         });
       }
 
@@ -216,7 +242,10 @@ const DESERIALIZERS: Array<Deserializer> = [
         trips,
       };
     },
-    scanForIdProperty: (deserialized: ServerResponseAllFlatbuffers, targetId: string) => {
+    scanForIdProperty: (
+      deserialized: ServerResponseAllFlatbuffers,
+      targetId: string,
+    ) => {
       // Optimization: avoid constructing one object per trip.
       let t;
       let tripsLength = deserialized.tripsLength();
@@ -266,6 +295,14 @@ const DESERIALIZERS: Array<Deserializer> = [
       return {
         trips: deserialized.trips.map((trip: any) => ({
           ...trip,
+          memberCasual:
+            trip.memberCasual === "member"
+              ? MemberCasual.member
+              : MemberCasual.casual,
+          rideableType:
+            trip.rideableType === "classic_bike"
+              ? RideableType.classic
+              : RideableType.electric,
           startedAt: new Date(trip.startedAt),
           endedAt: new Date(trip.endedAt),
         })),
@@ -277,41 +314,37 @@ const DESERIALIZERS: Array<Deserializer> = [
   },
 ];
 
-type SerializedSizeStats = {
-  name: string;
-  size: number;
-  zstdCompressedSize: number;
-};
-
 type SerializePerformanceStats = {
   name: string;
   deserializeDuration: number;
   serializeDuration: number;
   scanForIdPropertyDuration: number;
   materializeAsPojoDuration: number;
+  size: number;
+  zstdCompressedSize: number;
+  zstdDuration: number;
 };
 
-async function serializeSizeTests(d: Deserializer): Promise<SerializedSizeStats> {
-  const response = await fetch(`/${d.name}`, { headers: { "X-Zstd-Enabled": "true" } });
+async function serializePerformanceTests(
+  d: Deserializer,
+): Promise<SerializePerformanceStats> {
+  const response = await fetch(`/${d.name}`, {
+    headers: { "X-Zstd-Enabled": "true" },
+  });
   const bodyBytes = await response.bytes();
 
   const resourceEntry: PerformanceResourceTiming = performance
     .getEntriesByType("resource")
     .findLast(
-      (entry) => entry.entryType === "resource" && entry.name.endsWith(`/${d.name}`),
+      (entry) =>
+        entry.entryType === "resource" && entry.name.endsWith(`/${d.name}`),
     ) as unknown as PerformanceResourceTiming;
 
-  return {
-    name: d.name,
-    size: bodyBytes.length,
-    zstdCompressedSize: resourceEntry.encodedBodySize,
-  };
-}
+  const serializeDuration = parseInt(
+    response.headers.get("x-encode-duration") || "0",
+  );
 
-async function serializePerformanceTests(d: Deserializer): Promise<SerializePerformanceStats> {
-  const response = await fetch(`/${d.name}`, { headers: { "X-Zstd-Enabled": "true" } });
-  const bodyBytes = await response.bytes();
-  const serializeDuration = parseInt(response.headers.get("x-encode-duration") || "0");
+  const zstdDuration = parseInt(response.headers.get("x-zstd-duration") || "0");
 
   // It's possible that repeatedly using deserialized like this may cause the JIT to optimize some
   // things in an unrealistic way.
@@ -329,23 +362,27 @@ async function serializePerformanceTests(d: Deserializer): Promise<SerializePerf
 
   const materializeAsPojoStartTime = performance.now();
   const materialized = d.materializeAsPojo(deserialized);
-  const materializeAsPojoDuration = performance.now() - materializeAsPojoStartTime;
+  const materializeAsPojoDuration =
+    performance.now() - materializeAsPojoStartTime;
+
+  // Sanity check: verify that we got back some trips.
   if (materialized.trips.length === 0) {
     throw new Error("Materialized trips should not be empty");
   }
 
-  // Verify that the materialized object is in fact the type we expect by spot checking some
-  // properties.
+  // Sanity check: verify that the materialized object is in fact the type we expect
+  // To be faster, we only check a random sample.
   const schemaCheckStartTime = performance.now();
   for (const trip of materialized.trips) {
-    try {
-      tripSchema.parse(trip);
-    } catch (error) {
-      debugger;
+    if (Math.random() < 0.01) {
+      try {
+        tripSchema.parse(trip);
+      } catch (error) {
+        debugger;
+      }
     }
   }
   const schemaCheckDuration = performance.now() - schemaCheckStartTime;
-  console.log(`Schema check duration: ${schemaCheckDuration}ms`);
 
   return {
     name: d.name,
@@ -353,19 +390,15 @@ async function serializePerformanceTests(d: Deserializer): Promise<SerializePerf
     deserializeDuration,
     scanForIdPropertyDuration,
     materializeAsPojoDuration,
+    size: bodyBytes.length,
+    zstdCompressedSize: resourceEntry.encodedBodySize,
+    zstdDuration,
   };
 }
 
-async function runSerializeSizeTests(): Promise<Array<SerializedSizeStats>> {
-  const results = [];
-  // These must happen sequentially to avoid event loop contention on the client side.
-  for (const d of DESERIALIZERS) {
-    results.push(await serializeSizeTests(d));
-  }
-  return results;
-}
-
-async function runSerializePerformanceTests(): Promise<Array<SerializePerformanceStats>> {
+async function runSerializePerformanceTests(): Promise<
+  Array<SerializePerformanceStats>
+> {
   const results = [];
   // These must happen sequentially to avoid event loop contention on the client side.
   for (const d of DESERIALIZERS) {
@@ -374,7 +407,6 @@ async function runSerializePerformanceTests(): Promise<Array<SerializePerformanc
   return results;
 }
 
-const sizeStats = await runSerializeSizeTests();
 const performanceStats = await runSerializePerformanceTests();
 
 function getCanvasElement(id: string): HTMLCanvasElement {
@@ -410,11 +442,11 @@ const defaultChartOptions = {
 new Chart(getCanvasElement("sizes"), {
   type: "bar",
   data: {
-    labels: sizeStats.map((s) => s.name),
+    labels: performanceStats.map((s) => s.name),
     datasets: [
       {
         label: "Serialized Size",
-        data: sizeStats.map((s) => s.size),
+        data: performanceStats.map((s) => s.size),
         ...defaultChartOptions,
       },
     ],
@@ -424,11 +456,11 @@ new Chart(getCanvasElement("sizes"), {
 new Chart(getCanvasElement("compressedSizes"), {
   type: "bar",
   data: {
-    labels: sizeStats.map((s) => s.name),
+    labels: performanceStats.map((s) => s.name),
     datasets: [
       {
         label: "Compressed Size",
-        data: sizeStats.map((s) => s.zstdCompressedSize),
+        data: performanceStats.map((s) => s.zstdCompressedSize),
         ...defaultChartOptions,
       },
     ],
@@ -443,6 +475,20 @@ new Chart(getCanvasElement("serializationTime"), {
       {
         label: "Serialize Duration",
         data: performanceStats.map((s) => s.serializeDuration),
+        ...defaultChartOptions,
+      },
+    ],
+  },
+});
+
+new Chart(getCanvasElement("zstdDuration"), {
+  type: "bar",
+  data: {
+    labels: performanceStats.map((s) => s.name),
+    datasets: [
+      {
+        label: "Zstd Duration",
+        data: performanceStats.map((s) => s.zstdDuration),
         ...defaultChartOptions,
       },
     ],
@@ -471,7 +517,10 @@ new Chart(getCanvasElement("endToEndPojo"), {
       {
         label: "End to End Duration for Regular JS Object",
         data: performanceStats.map(
-          (s) => s.serializeDuration + s.deserializeDuration + s.materializeAsPojoDuration,
+          (s) =>
+            s.serializeDuration +
+            s.deserializeDuration +
+            s.materializeAsPojoDuration,
         ),
         ...defaultChartOptions,
       },
@@ -482,12 +531,15 @@ new Chart(getCanvasElement("endToEndPojo"), {
 new Chart(getCanvasElement("endToEndScanForProperty"), {
   type: "bar",
   data: {
-    labels: sizeStats.map((s) => s.name),
+    labels: performanceStats.map((s) => s.name),
     datasets: [
       {
         label: "End to End Duration to Scan for a single Property",
         data: performanceStats.map(
-          (s) => s.serializeDuration + s.deserializeDuration + s.scanForIdPropertyDuration,
+          (s) =>
+            s.serializeDuration +
+            s.deserializeDuration +
+            s.scanForIdPropertyDuration,
         ),
         ...defaultChartOptions,
       },

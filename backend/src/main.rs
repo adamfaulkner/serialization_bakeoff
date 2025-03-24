@@ -1,5 +1,5 @@
 use axum::{
-    body::{Body, BodyDataStream},
+    body::Body,
     extract::State,
     http::{Request, StatusCode},
     middleware,
@@ -9,19 +9,12 @@ use axum::{
 };
 use axum_server::tls_rustls::RustlsConfig;
 use bebop::Record;
-use bytes::Buf;
+use http_body_util::BodyExt;
 use prost::Message;
 use serde::Serialize;
 
 use crate::trip::Trip;
-use std::{
-    convert::Infallible,
-    fs,
-    io::{Cursor, Read, Write},
-    net::SocketAddr,
-    sync::Arc,
-    time::Instant,
-};
+use std::{convert::Infallible, fs, io::Cursor, net::SocketAddr, sync::Arc, time::Instant};
 
 pub mod load_data;
 pub mod trip;
@@ -275,96 +268,6 @@ async fn add_headers(
     Ok(response)
 }
 
-struct SwappableWriter {
-    underlying: Vec<u8>,
-}
-
-impl Write for SwappableWriter {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.underlying.write(buf)
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        self.underlying.flush()
-    }
-}
-
-impl SwappableWriter {
-    fn take(&mut self) -> Vec<u8> {
-        std::mem::take(&mut self.underlying)
-    }
-}
-
-struct ZstdStream<'a> {
-    encoder: zstd::stream::Encoder<'a, SwappableWriter>,
-    underlying_body_stream: BodyDataStream,
-    buffered_data: Option<Cursor<bytes::Bytes>>,
-    stream_finished: bool,
-}
-
-use futures::{
-    stream::Stream,
-    task::{Context, Poll},
-    StreamExt,
-};
-use std::pin::Pin;
-
-impl ZstdStream<'_> {
-    fn new(underlying_body_stream: BodyDataStream) -> Self {
-        let encoder = zstd::stream::Encoder::new(
-            SwappableWriter {
-                underlying: Vec::new(),
-            },
-            3,
-        )
-        .unwrap();
-        ZstdStream {
-            encoder,
-            underlying_body_stream,
-            stream_finished: false,
-            buffered_data: None,
-        }
-    }
-}
-
-impl Stream for ZstdStream<'_> {
-    type Item = Result<Vec<u8>, axum::Error>;
-
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        if self.stream_finished {
-            return Poll::Ready(None);
-        }
-
-        if let Some(buffered_data) = &mut self.buffered_data {
-            if !buffered_data.has_remaining() {
-                self.buffered_data = None;
-            } else {
-                let mut chunk = [0; 10240];
-                let read = buffered_data.read(&mut chunk).unwrap();
-                self.encoder.write_all(&chunk[..read]).unwrap();
-                let buffer = self.encoder.get_mut().take();
-                return Poll::Ready(Some(Ok(buffer)));
-            }
-        }
-
-        match self.underlying_body_stream.poll_next_unpin(cx) {
-            Poll::Pending => Poll::Pending,
-            Poll::Ready(None) => match self.encoder.do_finish() {
-                Ok(_) => {
-                    self.stream_finished = true;
-                    Poll::Ready(Some(Ok(self.encoder.get_mut().take())))
-                }
-                Err(e) => Poll::Ready(Some(Err(axum::Error::new(e)))),
-            },
-            Poll::Ready(Some(Ok(chunk))) => {
-                self.buffered_data = Some(Cursor::new(chunk));
-                self.poll_next(cx)
-            }
-            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(e))),
-        }
-    }
-}
-
 async fn zstd_if_requested(
     req: Request<Body>,
     next: middleware::Next,
@@ -379,14 +282,20 @@ async fn zstd_if_requested(
     }
 
     let (head, body) = response.into_parts();
-    let body_bytes = body.into_data_stream();
-    let zstd_stream = ZstdStream::new(body_bytes);
+    let body_bytes: Vec<u8> = body.collect().await.unwrap().to_bytes().to_vec();
+    let zstd_start = Instant::now();
+    let zstd_body = zstd::encode_all(Cursor::new(body_bytes), 3).unwrap();
+    let zstd_duration = zstd_start.elapsed();
 
-    let mut final_response = Response::from_parts(head, Body::from_stream(zstd_stream));
+    let mut final_response = Response::from_parts(head, Body::from(zstd_body));
 
     final_response
         .headers_mut()
         .insert("Content-Encoding", "zstd".parse().unwrap());
+    final_response.headers_mut().insert(
+        "X-Zstd-Duration",
+        format!("{}", zstd_duration.as_millis()).parse().unwrap(),
+    );
     Ok(final_response)
 }
 

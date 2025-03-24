@@ -32,8 +32,15 @@
 
 3/20
 - Add data sets
-- Add schema checking after deserialization
-- Slim down set of dependencies; take note of impact
+- [X] Add schema checking after deserialization
+- [X] Slim down set of dependencies; take note of impact
     - Before slimming: 2.3GB rust analyzer
     - After slimming: 2.2GB rust analyzer :(
     - Reqwest is huge and is a build dependency of bebop tools. We could easily eliminate it at the cost of needing additional setup.
+
+
+3/23
+- [X] Fix serialization size test to not double things
+- [X] Un-stream the zstd stuff, add notes
+- Figure out appropriate bigness of data
+- Tabulate schema checking results
