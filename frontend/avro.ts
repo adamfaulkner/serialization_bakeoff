@@ -1,5 +1,6 @@
 import * as avsc from "avsc";
 import { MemberCasual, RideableType, ServerResponseAll } from "./trip.js";
+import { Buffer } from "buffer";
 
 const avroSchema = await (await fetch("./dist/avro_schema.json")).text();
 export const avro = {
