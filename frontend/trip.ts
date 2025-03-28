@@ -32,3 +32,8 @@ export const tripSchema = z.object({
 });
 
 export type Trip = z.infer<typeof tripSchema>;
+
+// TODO: eventually we want to serialize streams as well; the `all` suffix here means we serialize all trips at once
+export type ServerResponseAll = {
+  trips: Array<Trip>;
+};
