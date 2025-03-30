@@ -31,9 +31,42 @@ export const tripSchema = z.object({
   memberCasual: z.nativeEnum(MemberCasual),
 });
 
+export const serverResponseAllSchema = z.object({
+  trips: z.array(tripSchema),
+});
+
 export type Trip = z.infer<typeof tripSchema>;
 
 // TODO: eventually we want to serialize streams as well; the `all` suffix here means we serialize all trips at once
 export type ServerResponseAll = {
+  trips: Array<Trip>;
+};
+
+export const tripJsonSchema = z.object({
+  rideId: z.string().nonempty(),
+  rideableType: z.union([
+    z.literal("electric_bike"),
+    z.literal("classic_bike"),
+  ]),
+  startedAt: z.union([z.number(), z.bigint()]),
+  endedAt: z.union([z.number(), z.bigint()]),
+  // These are optional because some trips do not start (initial manufacture of the bike?) or do not
+  // finish (bike is lost or stolen?)
+  startStationName: z.string().optional(),
+  startStationId: z.string().optional(),
+  endStationName: z.string().optional(),
+  endStationId: z.string().optional(),
+  startLat: z.number().optional(),
+  startLng: z.number().optional(),
+  endLat: z.number().optional(),
+  endLng: z.number().optional(),
+  memberCasual: z.union([z.literal("member"), z.literal("casual")]),
+});
+
+export const serverResponseAllJsonSchema = z.object({
+  trips: z.array(tripJsonSchema),
+});
+
+export type ServerResponseAllJson = {
   trips: Array<Trip>;
 };

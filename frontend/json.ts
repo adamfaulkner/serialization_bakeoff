@@ -1,7 +1,13 @@
-import { MemberCasual, RideableType, ServerResponseAll } from "./trip.js";
+import { Deserializer } from "./deserializer.js";
+import {
+  MemberCasual,
+  RideableType,
+  ServerResponseAll,
+  serverResponseAllJsonSchema,
+} from "./trip.js";
 
-export const json = {
-  name: "json",
+export const json: Deserializer<any> = {
+  name: "json" as const,
   deserializeAll: (data: Uint8Array) => {
     const decoder = new TextDecoder();
     return JSON.parse(decoder.decode(data));
@@ -27,5 +33,12 @@ export const json = {
   scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
     const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
     return trip !== undefined;
+  },
+  verifyServerResponse: function (deserialized: any): boolean {
+    const result = serverResponseAllJsonSchema.safeParse(deserialized);
+    if (!result.success) {
+      console.debug(result.error);
+    }
+    return result.success;
   },
 };

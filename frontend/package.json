@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "capnpc-ts": "^0.7.0",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "protobufjs-cli": "^1.1.3"
   }
 }

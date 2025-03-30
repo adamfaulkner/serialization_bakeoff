@@ -4,19 +4,17 @@ import { json } from "./json.js";
 import { proto } from "./proto.js";
 import { msgpack } from "./msgpack.js";
 import { bebop } from "./bebop.js";
-import { avro } from "./avro.js";
+import { avro, AvroServerResponseAll } from "./avro.js";
 import { cbor } from "./cbor.js";
 import { capnp } from "./capnp.js";
 import { flatbuffers } from "./flatbuffers.js";
+import { Message } from "protobufjs/index.js";
+import { ServerResponseAll as ServerResponseAllBebop } from "./bops.gen.js";
+import { ServerResponseAll as ServerResponseAllCapnp } from "./capnp_trip.js";
+import { ServerResponseAll as ServerResponseAllFlatbuffers } from "./flatbuffers/server-response-all.js";
+import { Deserializer, SerializePerformanceStats } from "./deserializer.js";
 
-interface Deserializer {
-  name: string;
-  deserializeAll: (data: Uint8Array) => any;
-  materializeAsPojo: (deserialized: any) => ServerResponseAll;
-  scanForIdProperty: (deserialized: any, targetId: string) => boolean;
-}
-
-const DESERIALIZERS: Array<Deserializer> = [
+const DESERIALIZERS: Array<Deserializer<any>> = [
   json,
   proto,
   msgpack,
@@ -27,19 +25,8 @@ const DESERIALIZERS: Array<Deserializer> = [
   avro,
 ];
 
-type SerializePerformanceStats = {
-  name: string;
-  deserializeDuration: number;
-  serializeDuration: number;
-  scanForIdPropertyDuration: number;
-  materializeAsPojoDuration: number;
-  size: number;
-  zstdCompressedSize: number;
-  zstdDuration: number;
-};
-
 async function serializePerformanceTests(
-  d: Deserializer,
+  d: Deserializer<any>,
 ): Promise<SerializePerformanceStats> {
   const response = await fetch(`/${d.name}`, {
     headers: { "X-Zstd-Enabled": "true" },
@@ -64,6 +51,13 @@ async function serializePerformanceTests(
   const deserializeStartTime = performance.now();
   const deserialized = await d.deserializeAll(bodyBytes);
   const deserializeDuration = performance.now() - deserializeStartTime;
+
+  const validationStartTime = performance.now();
+  if (!d.verifyServerResponse(deserialized)) {
+    debugger;
+    throw new Error("Server response should be valid");
+  }
+  const validationDuration = performance.now() - validationStartTime;
 
   const scanStartTime = performance.now();
   const scanResult = d.scanForIdProperty(deserialized, "123");
@@ -106,6 +100,7 @@ async function serializePerformanceTests(
     size: bodyBytes.length,
     zstdCompressedSize: resourceEntry.encodedBodySize,
     zstdDuration,
+    validationDuration,
   };
 }
 
@@ -234,6 +229,26 @@ new Chart(getCanvasElement("endToEndPojo"), {
             s.serializeDuration +
             s.deserializeDuration +
             s.materializeAsPojoDuration,
+        ),
+        ...defaultChartOptions,
+      },
+    ],
+  },
+});
+
+new Chart(getCanvasElement("endToEndPojoValidated"), {
+  type: "bar",
+  data: {
+    labels: performanceStats.map((s) => s.name),
+    datasets: [
+      {
+        label: "End to End Duration for Regular JS Object",
+        data: performanceStats.map(
+          (s) =>
+            s.serializeDuration +
+            s.deserializeDuration +
+            s.materializeAsPojoDuration +
+            s.validationDuration,
         ),
         ...defaultChartOptions,
       },

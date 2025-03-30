@@ -1,7 +1,13 @@
 import { decode } from "cbor-x/decode.js";
-import { ServerResponseAll, MemberCasual, RideableType } from "./trip.js";
-export const cbor = {
-  name: "cbor",
+import {
+  ServerResponseAll,
+  MemberCasual,
+  RideableType,
+  serverResponseAllJsonSchema,
+} from "./trip.js";
+import { Deserializer } from "./deserializer.js";
+export const cbor: Deserializer<any> = {
+  name: "cbor" as const,
   deserializeAll: (data: Uint8Array) => {
     return decode(data);
   },
@@ -26,5 +32,12 @@ export const cbor = {
   scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
     const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
     return trip !== undefined;
+  },
+  verifyServerResponse: function (deserialized: any): boolean {
+    const result = serverResponseAllJsonSchema.safeParse(deserialized);
+    if (!result.success) {
+      console.debug(result.error);
+    }
+    return result.success;
   },
 };

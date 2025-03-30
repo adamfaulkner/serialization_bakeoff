@@ -1,59 +1,80 @@
 import * as avsc from "avsc";
-import { MemberCasual, RideableType, ServerResponseAll } from "./trip.js";
+import { MemberCasual, RideableType, ServerResponseAll, Trip } from "./trip.js";
 import { Buffer } from "buffer";
+import { Deserializer } from "./deserializer.js";
 
 const avroSchema = await (await fetch("./dist/avro_schema.json")).text();
-export const avro = {
-  name: "avro",
-  deserializeAll: function (data: Uint8Array) {
+
+// Trip uses missing values for unset stat/end lat/lng, avro uses null. Remap this.
+// Trip uses numeric values for memberCasual and rideableType, remap this.
+export type AvroDeserializedTrip = Omit<
+  Trip,
+  | "startLat"
+  | "startLng"
+  | "endLat"
+  | "endLng"
+  | "memberCasual"
+  | "rideableType"
+> & {
+  startLat: number | null;
+  startLng: number | null;
+  endLat: number | null;
+  endLng: number | null;
+  startStationName: string | null;
+  endStationName: string | null;
+  startStationId: string | null;
+  endStationId: string | null;
+  memberCasual: "member" | "casual";
+  rideableType: "classic" | "electric";
+};
+
+export type AvroServerResponseAll = {
+  trips: Array<AvroDeserializedTrip>;
+};
+
+export const avro: Deserializer<AvroServerResponseAll> = {
+  name: "avro" as const,
+  deserializeAll: function (data: Uint8Array): AvroServerResponseAll {
     const schema = avsc.parse(avroSchema);
     return schema.decode(Buffer.from(data)).value;
   },
-  materializeAsPojo: function (deserialized: any): ServerResponseAll {
+  materializeAsPojo: function (
+    deserialized: AvroServerResponseAll,
+  ): ServerResponseAll {
+    const serverResponseAll: ServerResponseAll = { trips: [] };
     // The lat and lng values use null to indicate a missing value, while we expect missing
     for (const trip of deserialized.trips) {
-      if (trip.startLat === null) {
-        delete trip.startLat;
-      }
-      if (trip.startLng === null) {
-        delete trip.startLng;
-      }
-      if (trip.endLat === null) {
-        delete trip.endLat;
-      }
-      if (trip.endLng === null) {
-        delete trip.endLng;
-      }
-      if (trip.startStationId === null) {
-        delete trip.startStationId;
-      }
-      if (trip.startStationName === null) {
-        delete trip.startStationName;
-      }
-      if (trip.endStationId === null) {
-        delete trip.endStationId;
-      }
-      if (trip.endStationName === null) {
-        delete trip.endStationName;
-      }
-    }
-    return {
-      trips: deserialized.trips.map((trip: any) => ({
-        ...trip,
+      const remappedTrip: Trip = {
+        rideId: trip.rideId,
+        startedAt: new Date(trip.startedAt),
+        endedAt: new Date(trip.endedAt),
+        startStationId: trip.startStationId ?? undefined,
+        startStationName: trip.startStationName ?? undefined,
+        endStationId: trip.endStationId ?? undefined,
+        endStationName: trip.endStationName ?? undefined,
         memberCasual:
           trip.memberCasual === "member"
             ? MemberCasual.member
             : MemberCasual.casual,
         rideableType:
-          trip.rideableType === "classic_bike"
+          trip.rideableType === "classic"
             ? RideableType.classic
             : RideableType.electric,
-        startedAt: new Date(trip.startedAt),
-        endedAt: new Date(trip.endedAt),
-      })),
-    };
+      };
+      serverResponseAll.trips.push(remappedTrip);
+    }
+    return serverResponseAll;
   },
-  scanForIdProperty: function (deserialized: any, targetId: string): boolean {
+  scanForIdProperty: function (
+    deserialized: AvroServerResponseAll,
+    targetId: string,
+  ): boolean {
     return deserialized.trips.some((trip: any) => trip.ride_id === targetId);
+  },
+  // It is not possible to have an invalid value here.
+  verifyServerResponse: function (
+    deserialized: AvroServerResponseAll,
+  ): boolean {
+    return true;
   },
 };

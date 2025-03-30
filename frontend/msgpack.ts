@@ -1,7 +1,14 @@
 import { unpack } from "msgpackr/unpack.js";
-import { MemberCasual, RideableType, ServerResponseAll } from "./trip.js";
-export const msgpack = {
-  name: "msgpack",
+import {
+  MemberCasual,
+  RideableType,
+  ServerResponseAll,
+  serverResponseAllJsonSchema,
+} from "./trip.js";
+import { Deserializer } from "./deserializer.js";
+
+export const msgpack: Deserializer<any> = {
+  name: "msgpack" as const,
   deserializeAll: (data: Uint8Array) => {
     return unpack(data);
   },
@@ -27,5 +34,12 @@ export const msgpack = {
   scanForIdProperty: (deserialized: ServerResponseAll, targetId: string) => {
     const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
     return trip !== undefined;
+  },
+  verifyServerResponse: function (deserialized: any): boolean {
+    const result = serverResponseAllJsonSchema.safeParse(deserialized);
+    if (!result.success) {
+      console.debug(result.error);
+    }
+    return result.success;
   },
 };
