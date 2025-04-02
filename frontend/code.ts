@@ -12,6 +12,7 @@ import { renderCharts } from "./charts.js";
 
 const DESERIALIZERS: Array<Deserializer<any>> = [
   json,
+  /*
   proto,
   msgpack,
   cbor,
@@ -19,6 +20,7 @@ const DESERIALIZERS: Array<Deserializer<any>> = [
   capnp,
   flatbuffers,
   avro,
+  */
 ];
 
 async function serializePerformanceTests(

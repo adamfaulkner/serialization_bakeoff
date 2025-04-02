@@ -1,9 +1,12 @@
+import { Ajv } from "ajv/dist/jtd.js";
 import { Deserializer } from "./deserializer.js";
 import {
   MemberCasual,
   RideableType,
   ServerResponseAll,
   serverResponseAllJsonSchema,
+  serverResponseAllReceivedAjvValidator,
+  serverResponseAllReceivedJsonAjvSchema,
 } from "./trip.js";
 
 export const json: Deserializer<any> = {
@@ -35,13 +38,17 @@ export const json: Deserializer<any> = {
     return trip !== undefined;
   },
   verifyServerResponse: function (deserialized: any): boolean {
+    const ajv = new Ajv({ allErrors: true });
     performance.mark("json-verify-start");
-    const result = serverResponseAllJsonSchema.safeParse(deserialized);
+    const result = ajv.validate(
+      serverResponseAllReceivedJsonAjvSchema,
+      deserialized,
+    );
+    if (!result) {
+      debugger;
+    }
     performance.mark("json-verify-end");
     performance.measure("json-verify", "json-verify-start", "json-verify-end");
-    if (!result.success) {
-      console.debug(result.error);
-    }
-    return result.success;
+    return result;
   },
 };

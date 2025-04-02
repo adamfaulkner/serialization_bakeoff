@@ -94,6 +94,36 @@ export const tripReceivedJsonSchema = z.object({
   memberCasual: z.union([z.literal("member"), z.literal("casual")]),
 });
 
+const tripReceivedJsonAjvSchema = {
+  properties: {
+    rideId: { type: "string" },
+    rideableType: { enum: ["electric_bike", "classic_bike"] },
+    startedAt: { type: "float64" },
+    endedAt: { type: "float64" },
+    memberCasual: { enum: ["member", "casual"] },
+  },
+  optionalProperties: {
+    startStationName: { type: "string" },
+    startStationId: { type: "string" },
+    endStationName: { type: "string" },
+    endStationId: { type: "string" },
+    startLat: { type: "float64" },
+    startLng: { type: "float64" },
+    endLat: { type: "float64" },
+    endLng: { type: "float64" },
+  },
+};
+
+export const serverResponseAllReceivedJsonAjvSchema = {
+  properties: {
+    trips: { elements: tripReceivedJsonAjvSchema },
+  },
+};
+
+export const serverResponseAllReceivedAjvValidator = ajv.compile(
+  serverResponseAllReceivedJsonAjvSchema,
+);
+
 export const serverResponseAllJsonSchema = z.object({
   trips: z.array(tripReceivedJsonSchema),
 });
