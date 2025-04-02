@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Ajv, JTDSchemaType } from "ajv/dist/jtd.js";
 
 export enum RideableType {
   electric = 1,
@@ -30,19 +31,49 @@ export const tripSchema = z.object({
   endLng: z.number().optional(),
   memberCasual: z.nativeEnum(MemberCasual),
 });
+export type Trip = z.infer<typeof tripSchema>;
+
+const tripJtdSchema: JTDSchemaType<Trip> = {
+  properties: {
+    rideId: { type: "string" },
+    rideableType: { type: "uint8" },
+    startedAt: { type: "timestamp" },
+    endedAt: { type: "timestamp" },
+    memberCasual: { type: "uint8" },
+  },
+  optionalProperties: {
+    startStationName: { type: "string" },
+    startStationId: { type: "string" },
+    endStationName: { type: "string" },
+    endStationId: { type: "string" },
+    startLat: { type: "float64" },
+    startLng: { type: "float64" },
+    endLat: { type: "float64" },
+    endLng: { type: "float64" },
+  },
+};
+
+const serverResponseAllJtdSchema: JTDSchemaType<ServerResponseAll> = {
+  properties: {
+    trips: { elements: tripJtdSchema },
+  },
+};
+
+const ajv = new Ajv();
+export const serverResponseAllAjvValidator = ajv.compile(
+  serverResponseAllJtdSchema,
+);
 
 export const serverResponseAllSchema = z.object({
   trips: z.array(tripSchema),
 });
-
-export type Trip = z.infer<typeof tripSchema>;
 
 // TODO: eventually we want to serialize streams as well; the `all` suffix here means we serialize all trips at once
 export type ServerResponseAll = {
   trips: Array<Trip>;
 };
 
-export const tripJsonSchema = z.object({
+export const tripReceivedJsonSchema = z.object({
   rideId: z.string().nonempty(),
   rideableType: z.union([
     z.literal("electric_bike"),
@@ -64,7 +95,7 @@ export const tripJsonSchema = z.object({
 });
 
 export const serverResponseAllJsonSchema = z.object({
-  trips: z.array(tripJsonSchema),
+  trips: z.array(tripReceivedJsonSchema),
 });
 
 export type ServerResponseAllJson = {

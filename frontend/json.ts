@@ -35,7 +35,10 @@ export const json: Deserializer<any> = {
     return trip !== undefined;
   },
   verifyServerResponse: function (deserialized: any): boolean {
+    performance.mark("json-verify-start");
     const result = serverResponseAllJsonSchema.safeParse(deserialized);
+    performance.mark("json-verify-end");
+    performance.measure("json-verify", "json-verify-start", "json-verify-end");
     if (!result.success) {
       console.debug(result.error);
     }
