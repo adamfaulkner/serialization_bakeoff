@@ -1,18 +1,27 @@
-import { unpack } from "msgpackr/unpack.js";
+import { Decoder, unpack } from "msgpackr/unpack.js";
 import {
   MemberCasual,
   RideableType,
   ServerResponseAll,
+  serverResponseAllAjvValidator,
   serverResponseAllJsonSchema,
+  serverResponseAllReceivedAjvValidator,
+  serverResponseAllReceivedJsonAjvSchema,
 } from "./trip.js";
 import { Deserializer } from "./deserializer.js";
+import { Ajv } from "ajv/dist/jtd.js";
 
 export const msgpack: Deserializer<any> = {
   name: "msgpack" as const,
   deserializeAll: (data: Uint8Array) => {
-    return unpack(data);
+    const decoder = new Decoder({
+      useRecords: false,
+      mapsAsObjects: true,
+      int64AsType: "number",
+    });
+    return decoder.decode(data);
   },
-  materializeAsPojo: (deserialized: any) => {
+  materializeUnverifiedAsPojo: (deserialized: any) => {
     // The values deserialized by msgpackr are POJOs, except that the dates are represented as
     // strings.
     return {
@@ -35,11 +44,17 @@ export const msgpack: Deserializer<any> = {
     const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
     return trip !== undefined;
   },
-  verifyServerResponse: function (deserialized: any): boolean {
-    const result = serverResponseAllJsonSchema.safeParse(deserialized);
-    if (!result.success) {
-      console.debug(result.error);
+  materializeVerifedAsPojo: function (deserialized: any): ServerResponseAll {
+    const ajv = new Ajv();
+    // const result = serverResponseAllReceivedAjvValidator(deserialized);
+    const result = ajv.validate(
+      serverResponseAllReceivedJsonAjvSchema,
+      deserialized,
+    );
+    if (!result) {
+      debugger;
+      throw new Error("Invalid data");
     }
-    return result.success;
+    return this.materializeUnverifiedAsPojo(deserialized);
   },
 };

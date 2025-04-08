@@ -1,11 +1,53 @@
 import { Message } from "capnp-es";
 import {
-  MemberCasual,
-  RideableType,
+  MemberCasual as CapnpMemberCasual,
+  RideableType as CapnpRideableType,
   ServerResponseAll as ServerResponseAllCapnp,
 } from "./capnp_trip.js";
-import { ServerResponseAll } from "./trip.js";
+import { MemberCasual, RideableType, ServerResponseAll, Trip } from "./trip.js";
 import { Deserializer } from "./deserializer.js";
+
+function materializeAsPojo(
+  deserialized: ServerResponseAllCapnp,
+  verify: boolean,
+): ServerResponseAll {
+  // These values aren't POJOs, they use a Proxy object to provide a POJO-like interface.
+  // Build POJOs manually.
+  const trips: Array<Trip> = [];
+  for (const trip of deserialized.trips) {
+    if (verify) {
+      if (trip.rideableType === CapnpRideableType.UNKNOWN_RIDEABLE_TYPE) {
+        throw new Error(`Unknown rideable type: ${trip.rideableType}`);
+      }
+      if (trip.memberCasual === CapnpMemberCasual.UNKNOWN_MEMBER_CASUAL) {
+        throw new Error(`Unknown member casual: ${trip.memberCasual}`);
+      }
+    }
+
+    trips.push({
+      rideId: trip.rideId,
+      rideableType: trip.rideableType as unknown as RideableType,
+      startedAt: new Date(Number(trip.startedAtMs)),
+      endedAt: new Date(Number(trip.endedAtMs)),
+      ...(trip.startStationName !== ""
+        ? { startStationName: trip.startStationName }
+        : {}),
+      ...(trip.startStationId !== ""
+        ? { startStationId: trip.startStationId }
+        : {}),
+      ...(trip.endStationName !== ""
+        ? { endStationName: trip.endStationName }
+        : {}),
+      ...(trip.endStationId !== "" ? { endStationId: trip.endStationId } : {}),
+      ...(trip.startLat !== 0 ? { startLat: trip.startLat } : {}),
+      ...(trip.startLng !== 0 ? { startLng: trip.startLng } : {}),
+      ...(trip.endLat !== 0 ? { endLat: trip.endLat } : {}),
+      ...(trip.endLng !== 0 ? { endLng: trip.endLng } : {}),
+      memberCasual: trip.memberCasual as unknown as MemberCasual,
+    });
+  }
+  return { trips };
+}
 
 export const capnp: Deserializer<ServerResponseAllCapnp> = {
   name: "capnp" as const,
@@ -14,34 +56,8 @@ export const capnp: Deserializer<ServerResponseAllCapnp> = {
     responseMessage._capnp.traversalLimit = Infinity;
     return responseMessage.getRoot(ServerResponseAllCapnp);
   },
-  materializeAsPojo: (deserialized: ServerResponseAllCapnp) => {
-    // These values aren't POJOs, they use a Proxy object to provide a POJO-like interface.
-    // Build POJOs manually.
-    return {
-      trips: deserialized.trips.map((trip: any) => ({
-        rideId: trip.rideId,
-        rideableType: trip.rideableType,
-        startedAt: new Date(Number(trip.startedAtMs)),
-        endedAt: new Date(Number(trip.endedAtMs)),
-        ...(trip.startStationName !== ""
-          ? { startStationName: trip.startStationName }
-          : {}),
-        ...(trip.startStationId !== ""
-          ? { startStationId: trip.startStationId }
-          : {}),
-        ...(trip.endStationName !== ""
-          ? { endStationName: trip.endStationName }
-          : {}),
-        ...(trip.endStationId !== ""
-          ? { endStationId: trip.endStationId }
-          : {}),
-        ...(trip.startLat !== 0 ? { startLat: trip.startLat.lat } : {}),
-        ...(trip.startLng !== 0 ? { startLng: trip.startLng.lng } : {}),
-        ...(trip.endLat !== 0 ? { endLat: trip.endLat.lat } : {}),
-        ...(trip.endLng !== 0 ? { endLng: trip.endLng.lng } : {}),
-        memberCasual: trip.memberCasual,
-      })),
-    };
+  materializeUnverifiedAsPojo: (deserialized: ServerResponseAllCapnp) => {
+    return materializeAsPojo(deserialized, false);
   },
   scanForIdProperty: (
     deserialized: ServerResponseAllCapnp,
@@ -50,17 +66,9 @@ export const capnp: Deserializer<ServerResponseAllCapnp> = {
     const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
     return trip !== undefined;
   },
-  verifyServerResponse: function (
+  materializeVerifedAsPojo: function (
     deserialized: ServerResponseAllCapnp,
-  ): boolean {
-    for (const trip of deserialized.trips) {
-      if (trip.rideableType === RideableType.UNKNOWN_RIDEABLE_TYPE) {
-        return false;
-      }
-      if (trip.memberCasual === MemberCasual.UNKNOWN_MEMBER_CASUAL) {
-        return false;
-      }
-    }
-    return true;
+  ): ServerResponseAll {
+    return materializeAsPojo(deserialized, true);
   },
 };

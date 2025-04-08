@@ -8,7 +8,9 @@ export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
   deserializeAll: (data: Uint8Array) => {
     return trip_protobuf.ServerResponseAll.decode(data);
   },
-  materializeAsPojo: (deserialized: trip_protobuf.ServerResponseAll) => {
+  materializeUnverifiedAsPojo: (
+    deserialized: trip_protobuf.ServerResponseAll,
+  ) => {
     // The values deserialized here are POJOs. The only differences from JSON are that each object
     // has a prototype that sets the default value for all fields, and dates are in milliseconds.
     return {
@@ -28,12 +30,13 @@ export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
     const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
     return trip !== undefined;
   },
-  verifyServerResponse: function (
+  materializeVerifedAsPojo: function (
     deserialized: trip_protobuf.ServerResponseAll,
-  ): boolean {
+  ): ServerResponseAll {
+    const trips: Array<Trip> = [];
     for (const trip of deserialized.trips) {
       if (trip.rideId === undefined || trip.rideId === null) {
-        return false;
+        throw new Error("Invalid rideId");
       }
 
       if (
@@ -41,23 +44,15 @@ export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
         trip.rideableType === null ||
         trip.rideableType === trip_protobuf.RideableType.unknown_rideable_type
       ) {
-        return false;
+        throw new Error("Invalid rideableType");
       }
 
       if (trip.startedAtMs === undefined || trip.startedAtMs === null) {
-        return false;
-      }
-
-      if (trip.startedAtMs > Date.now()) {
-        return false;
+        throw new Error("Invalid startedAtMs");
       }
 
       if (trip.endedAtMs === undefined || trip.endedAtMs === null) {
-        return false;
-      }
-
-      if (trip.endedAtMs < trip.startedAtMs) {
-        return false;
+        throw new Error("Invalid endedAtMs");
       }
 
       if (
@@ -65,9 +60,14 @@ export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
         trip.memberCasual === null ||
         trip.memberCasual === trip_protobuf.MemberCasual.unknown_member_casual
       ) {
-        return false;
+        throw new Error("Invalid memberCasual");
       }
+      trips.push({
+        ...trip,
+        startedAt: new Date(trip.startedAtMs),
+        endedAt: new Date(trip.endedAtMs),
+      } as unknown as Trip);
     }
-    return true;
+    return { trips };
   },
 };

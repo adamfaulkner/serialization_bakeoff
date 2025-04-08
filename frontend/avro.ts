@@ -38,7 +38,8 @@ export const avro: Deserializer<AvroServerResponseAll> = {
     const schema = avsc.parse(avroSchema);
     return schema.decode(Buffer.from(data)).value;
   },
-  materializeAsPojo: function (
+
+  materializeUnverifiedAsPojo: function (
     deserialized: AvroServerResponseAll,
   ): ServerResponseAll {
     const serverResponseAll: ServerResponseAll = { trips: [] };
@@ -71,10 +72,10 @@ export const avro: Deserializer<AvroServerResponseAll> = {
   ): boolean {
     return deserialized.trips.some((trip: any) => trip.ride_id === targetId);
   },
-  // It is not possible to have an invalid value here.
-  verifyServerResponse: function (
+  materializeVerifedAsPojo: function (
     deserialized: AvroServerResponseAll,
-  ): boolean {
-    return true;
+  ): ServerResponseAll {
+    // There's no way for deserialized to be invalid. The deserializer already guarantees everything.
+    return this.materializeUnverifiedAsPojo(deserialized);
   },
 };

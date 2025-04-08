@@ -1,18 +1,21 @@
-import { decode } from "cbor-x/decode.js";
+import { Decoder } from "cbor-x/decode.js";
 import {
   ServerResponseAll,
   MemberCasual,
   RideableType,
   serverResponseAllJsonSchema,
+  serverResponseAllReceivedAjvValidator,
+  serverResponseAllReceivedJsonAjvSchema,
 } from "./trip.js";
 import { Deserializer } from "./deserializer.js";
+import { Ajv } from "ajv/dist/jtd.js";
 export const cbor: Deserializer<any> = {
   name: "cbor" as const,
   deserializeAll: (data: Uint8Array) => {
-    return decode(data);
+    const decoder = new Decoder({ mapsAsObjects: true, int64AsNumber: true });
+    return decoder.decode(data);
   },
-  materializeAsPojo: (deserialized: any) => {
-    // The values deserialized by cbor-x are POJOs, except that the dates are represented as strings.
+  materializeUnverifiedAsPojo: (deserialized: any) => {
     return {
       trips: deserialized.trips.map((trip: any) => ({
         ...trip,
@@ -33,11 +36,19 @@ export const cbor: Deserializer<any> = {
     const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
     return trip !== undefined;
   },
-  verifyServerResponse: function (deserialized: any): boolean {
-    const result = serverResponseAllJsonSchema.safeParse(deserialized);
-    if (!result.success) {
-      console.debug(result.error);
+  materializeVerifedAsPojo: function (deserialized: any): ServerResponseAll {
+    // cbor could return anything; we need to verify every property.
+    // We can just use the json type definition that we use in the
+    // json deserializer.
+    const ajv = new Ajv();
+    const result = ajv.validate(
+      serverResponseAllReceivedJsonAjvSchema,
+      deserialized,
+    );
+    if (!result) {
+      debugger;
+      throw new Error("Invalid CBOR data");
     }
-    return result.success;
+    return this.materializeUnverifiedAsPojo(deserialized);
   },
 };

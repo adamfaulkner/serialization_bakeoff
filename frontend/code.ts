@@ -1,4 +1,4 @@
-import { tripSchema } from "./trip.js";
+import { ServerResponseAll, tripSchema } from "./trip.js";
 import { json } from "./json.js";
 import { proto } from "./proto.js";
 import { msgpack } from "./msgpack.js";
@@ -12,16 +12,33 @@ import { renderCharts } from "./charts.js";
 
 const DESERIALIZERS: Array<Deserializer<any>> = [
   json,
-  /*
   proto,
   msgpack,
   cbor,
   bebop,
-  capnp,
+  //capnp,
   flatbuffers,
   avro,
-  */
 ];
+
+function sanityCheckMaterializedPojo(pojo: ServerResponseAll) {
+  // Sanity check: verify that we got back some trips.
+  if (pojo.trips.length === 0) {
+    throw new Error("Materialized trips should not be empty");
+  }
+
+  // Sanity check: verify that the materialized object is in fact the type we expect
+  // To be faster, we only check a random sample.
+  for (const trip of pojo.trips) {
+    if (Math.random() < 0.01) {
+      try {
+        tripSchema.parse(trip);
+      } catch (error) {
+        debugger;
+      }
+    }
+  }
+}
 
 async function serializePerformanceTests(
   d: Deserializer<any>,
@@ -50,12 +67,11 @@ async function serializePerformanceTests(
   const deserialized = await d.deserializeAll(bodyBytes);
   const deserializeDuration = performance.now() - deserializeStartTime;
 
-  const validationStartTime = performance.now();
-  if (!d.verifyServerResponse(deserialized)) {
-    debugger;
-    throw new Error("Server response should be valid");
-  }
-  const validationDuration = performance.now() - validationStartTime;
+  const materializeVerifiedStartTime = performance.now();
+  const materializedVerified = d.materializeVerifedAsPojo(deserialized);
+  const materializeAsVerifiedPojoDuration =
+    performance.now() - materializeVerifiedStartTime;
+  sanityCheckMaterializedPojo(materializedVerified);
 
   const scanStartTime = performance.now();
   const scanResult = d.scanForIdProperty(deserialized, "123");
@@ -65,40 +81,22 @@ async function serializePerformanceTests(
     throw new Error("Scan result should always be false");
   }
 
-  const materializeAsPojoStartTime = performance.now();
-  const materialized = d.materializeAsPojo(deserialized);
-  const materializeAsPojoDuration =
-    performance.now() - materializeAsPojoStartTime;
-
-  // Sanity check: verify that we got back some trips.
-  if (materialized.trips.length === 0) {
-    throw new Error("Materialized trips should not be empty");
-  }
-
-  // Sanity check: verify that the materialized object is in fact the type we expect
-  // To be faster, we only check a random sample.
-  const schemaCheckStartTime = performance.now();
-  for (const trip of materialized.trips) {
-    if (Math.random() < 0.01) {
-      try {
-        tripSchema.parse(trip);
-      } catch (error) {
-        debugger;
-      }
-    }
-  }
-  const schemaCheckDuration = performance.now() - schemaCheckStartTime;
+  const materializeAsUnverifiedPojoStartTime = performance.now();
+  const materializedUnverified = d.materializeUnverifiedAsPojo(deserialized);
+  const materializeAsUnverifiedPojoDuration =
+    performance.now() - materializeAsUnverifiedPojoStartTime;
+  sanityCheckMaterializedPojo(materializedUnverified);
 
   return {
     name: d.name,
     serializeDuration,
     deserializeDuration,
     scanForIdPropertyDuration,
-    materializeAsPojoDuration,
+    materializeAsUnverifiedPojoDuration,
     size: bodyBytes.length,
     zstdCompressedSize: resourceEntry.encodedBodySize,
     zstdDuration,
-    validationDuration,
+    materializeAsVerifiedPojoDuration,
   };
 }
 

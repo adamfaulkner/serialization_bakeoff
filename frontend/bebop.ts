@@ -12,7 +12,9 @@ export const bebop: Deserializer<IServerResponseAll> = {
   deserializeAll: (data: Uint8Array): IServerResponseAll => {
     return ServerResponseAllBebop.decode(data);
   },
-  materializeAsPojo: (deserialized: IServerResponseAll): ServerResponseAll => {
+  materializeUnverifiedAsPojo: (
+    deserialized: IServerResponseAll,
+  ): ServerResponseAll => {
     return deserialized as unknown as ServerResponseAll;
   },
   scanForIdProperty: (deserialized: IServerResponseAll, targetId: string) => {
@@ -22,37 +24,41 @@ export const bebop: Deserializer<IServerResponseAll> = {
     const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
     return trip !== undefined;
   },
-  verifyServerResponse: function (deserialized: IServerResponseAll): boolean {
+  materializeVerifedAsPojo: function (
+    deserialized: IServerResponseAll,
+  ): ServerResponseAll {
+    // Any field can be undefined, so we must check for the presence of all required fields.
+
     if (deserialized.trips === undefined) {
-      return false;
+      throw new Error("missing trips");
     }
     for (const trip of deserialized.trips) {
       if (trip.rideId === undefined) {
-        return false;
+        throw new Error("missing rideId");
       }
 
       if (
         trip.rideableType === undefined ||
         trip.rideableType === RideableType.Unknown
       ) {
-        return false;
+        throw new Error("missing rideableType");
       }
 
       if (trip.startedAt === undefined) {
-        return false;
+        throw new Error("missing startedAt");
       }
       if (trip.endedAt === undefined) {
-        return false;
+        throw new Error("missing endedAt");
       }
 
       if (
         trip.memberCasual === undefined ||
         trip.memberCasual === MemberCasual.Unknown
       ) {
-        return false;
+        throw new Error("missing memberCasual");
       }
     }
 
-    return true;
+    return this.materializeUnverifiedAsPojo(deserialized);
   },
 };

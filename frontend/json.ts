@@ -4,6 +4,7 @@ import {
   MemberCasual,
   RideableType,
   ServerResponseAll,
+  serverResponseAllAjvValidator,
   serverResponseAllJsonSchema,
   serverResponseAllReceivedAjvValidator,
   serverResponseAllReceivedJsonAjvSchema,
@@ -15,7 +16,7 @@ export const json: Deserializer<any> = {
     const decoder = new TextDecoder();
     return JSON.parse(decoder.decode(data));
   },
-  materializeAsPojo: (deserialized: any): ServerResponseAll => {
+  materializeUnverifiedAsPojo: (deserialized: any): ServerResponseAll => {
     // The JSON dates are represented as strings.
     return {
       trips: deserialized.trips.map((trip: any) => ({
@@ -37,18 +38,17 @@ export const json: Deserializer<any> = {
     const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
     return trip !== undefined;
   },
-  verifyServerResponse: function (deserialized: any): boolean {
-    const ajv = new Ajv({ allErrors: true });
+  materializeVerifedAsPojo: function (deserialized: any): ServerResponseAll {
+    // JSON could return anything; we validate everything using the ajv validator
+    const ajv = new Ajv();
     performance.mark("json-verify-start");
-    const result = ajv.validate(
-      serverResponseAllReceivedJsonAjvSchema,
-      deserialized,
-    );
+    const result = serverResponseAllReceivedAjvValidator(deserialized);
     if (!result) {
       debugger;
+      throw new Error("Invalid JSON");
     }
     performance.mark("json-verify-end");
     performance.measure("json-verify", "json-verify-start", "json-verify-end");
-    return result;
+    return this.materializeUnverifiedAsPojo(deserialized);
   },
 };

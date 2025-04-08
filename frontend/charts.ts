@@ -112,18 +112,18 @@ export function renderCharts(
     },
   });
 
-  new Chart(getCanvasElement("endToEndPojo"), {
+  new Chart(getCanvasElement("materializeUnverified"), {
     type: "bar",
     data: {
       labels: filteredPerformanceStats.map((s) => s.name),
       datasets: [
         {
-          label: "End to End Duration for Regular JS Object",
+          label: "End to End Duration to materialize an unverified JS Object",
           data: filteredPerformanceStats.map(
             (s) =>
               s.serializeDuration +
               s.deserializeDuration +
-              s.materializeAsPojoDuration,
+              s.materializeAsUnverifiedPojoDuration,
           ),
           ...defaultChartOptions,
         },
@@ -131,19 +131,18 @@ export function renderCharts(
     },
   });
 
-  new Chart(getCanvasElement("endToEndPojoValidated"), {
+  new Chart(getCanvasElement("materializeVerified"), {
     type: "bar",
     data: {
       labels: filteredPerformanceStats.map((s) => s.name),
       datasets: [
         {
-          label: "End to End Duration for Validated JS Object",
+          label: "End to End Duration to materialize a verified JS Object",
           data: filteredPerformanceStats.map(
             (s) =>
               s.serializeDuration +
               s.deserializeDuration +
-              s.materializeAsPojoDuration +
-              s.validationDuration,
+              s.materializeAsVerifiedPojoDuration,
           ),
           ...defaultChartOptions,
         },
