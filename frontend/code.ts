@@ -12,12 +12,12 @@ import { renderCharts } from "./charts.js";
 
 const DESERIALIZERS: Array<Deserializer<any>> = [
   json,
-  proto,
-  msgpack,
-  cbor,
+  // proto,
+  // msgpack,
+  // cbor,
   bebop,
-  // capnp,
-  flatbuffers,
+  //capnp,
+  // flatbuffers,
   avro,
 ];
 
@@ -46,7 +46,15 @@ async function serializePerformanceTests(
   const response = await fetch(`/${d.name}`, {
     headers: { "X-Zstd-Enabled": "true" },
   });
-  const bodyBytes = await response.bytes();
+
+  let body;
+  // if (d.name === 'json') {
+  if (false) {
+    body = await response.text();
+  } else {
+    body = await response.bytes();
+  }
+  // const bodyBytes = await response.bytes();
 
   const resourceEntry: PerformanceResourceTiming = performance
     .getEntriesByType("resource")
@@ -64,7 +72,7 @@ async function serializePerformanceTests(
   // It's possible that repeatedly using deserialized like this may cause the JIT to optimize some
   // things in an unrealistic way.
   const deserializeStartTime = performance.now();
-  const deserialized = await d.deserializeAll(bodyBytes);
+  const deserialized = await d.deserializeAll(body);
   const deserializeDuration = performance.now() - deserializeStartTime;
 
   const materializeVerifiedStartTime = performance.now();
@@ -93,7 +101,7 @@ async function serializePerformanceTests(
     deserializeDuration,
     scanForIdPropertyDuration,
     materializeAsUnverifiedPojoDuration,
-    size: bodyBytes.length,
+    size: body.length,
     zstdCompressedSize: resourceEntry.encodedBodySize,
     zstdDuration,
     materializeAsVerifiedPojoDuration,

@@ -12,7 +12,7 @@
   "dependencies": {
     "ajv": "^8.17.1",
     "assert": "^2.1.0",
-    "avsc": "file:../../../open_source/avsc/etc/browser/avsc.js",
+    "avsc": "mtth/avsc#91d653f72906102448a059cb81692177bb678f52",
     "bebop": "^3.1.3",
     "bebop-tools": "^3.1.3",
     "browserify-zlib": "^0.2.0",

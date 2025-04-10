@@ -15,6 +15,7 @@ export const json: Deserializer<any> = {
   deserializeAll: (data: Uint8Array) => {
     const decoder = new TextDecoder();
     return JSON.parse(decoder.decode(data));
+    // return JSON.parse(data);
   },
   materializeUnverifiedAsPojo: (deserialized: any): ServerResponseAll => {
     // The JSON dates are represented as strings.

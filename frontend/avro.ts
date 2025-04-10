@@ -1,6 +1,5 @@
 import * as avsc from "avsc";
 import { MemberCasual, RideableType, ServerResponseAll, Trip } from "./trip.js";
-import { Buffer } from "buffer";
 import { Deserializer } from "./deserializer.js";
 
 const avroSchema = await (await fetch("./dist/avro_schema.json")).text();
@@ -36,7 +35,11 @@ export type AvroServerResponseAll = {
 export const avro: Deserializer<AvroServerResponseAll> = {
   name: "avro" as const,
   deserializeAll: function (data: Uint8Array): AvroServerResponseAll {
-    return avroType.decode(data).value;
+    performance.mark('avro-decode-start');
+    const result = avroType.decode(data).value;
+    performance.mark('avro-decode-end');
+    performance.measure('avro-decode', 'avro-decode-start', 'avro-decode-end');
+    return result;
   },
 
   materializeUnverifiedAsPojo: function (
