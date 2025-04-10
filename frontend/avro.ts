@@ -4,6 +4,7 @@ import { Buffer } from "buffer";
 import { Deserializer } from "./deserializer.js";
 
 const avroSchema = await (await fetch("./dist/avro_schema.json")).text();
+const avroType = avsc.Type.forSchema(JSON.parse(avroSchema));
 
 // Trip uses missing values for unset stat/end lat/lng, avro uses null. Remap this.
 // Trip uses numeric values for memberCasual and rideableType, remap this.
@@ -35,8 +36,7 @@ export type AvroServerResponseAll = {
 export const avro: Deserializer<AvroServerResponseAll> = {
   name: "avro" as const,
   deserializeAll: function (data: Uint8Array): AvroServerResponseAll {
-    const schema = avsc.parse(avroSchema);
-    return schema.decode(Buffer.from(data)).value;
+    return avroType.decode(data).value;
   },
 
   materializeUnverifiedAsPojo: function (

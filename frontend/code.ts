@@ -16,7 +16,7 @@ const DESERIALIZERS: Array<Deserializer<any>> = [
   msgpack,
   cbor,
   bebop,
-  //capnp,
+  // capnp,
   flatbuffers,
   avro,
 ];

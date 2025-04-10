@@ -13,6 +13,11 @@ let buildContext = await esbuild.context({
   },
   alias: {
     zlib: "browserify-zlib",
+    stream: "stream-browserify",
+    buffer: "buffer",
+    util: "util",
+    events: "events",
+    path: "path"
   },
 });
 
