@@ -13,6 +13,7 @@ import { Ajv } from "ajv/dist/jtd.js";
 
 export const msgpack: Deserializer<any> = {
   name: "msgpack" as const,
+  endpoint: "msgpack",
   deserializeAll: (data: Uint8Array) => {
     const decoder = new Decoder({
       useRecords: false,

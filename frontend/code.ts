@@ -1,6 +1,8 @@
 import { ServerResponseAll, tripSchema } from "./trip.js";
 import { json } from "./json.js";
 import { proto } from "./proto.js";
+import { protobufEs } from "./protobuf_es.js";
+import { pbf } from "./pbf.js";
 import { msgpack } from "./msgpack.js";
 import { bebop } from "./bebop.js";
 import { avro } from "./avro.js";
@@ -10,12 +12,16 @@ import { flatbuffers } from "./flatbuffers.js";
 import { Deserializer, SerializePerformanceStats } from "./deserializer.js";
 import { renderCharts } from "./charts.js";
 
+// TODO: we really need to fix the string conversion piece for JSON.
+
 const DESERIALIZERS: Array<Deserializer<any>> = [
   json,
-  // proto,
+  proto,
+  // protobufEs,
+  // pbf,
   // msgpack,
   // cbor,
-  bebop,
+  // bebop,
   //capnp,
   // flatbuffers,
   avro,
@@ -43,7 +49,7 @@ function sanityCheckMaterializedPojo(pojo: ServerResponseAll) {
 async function serializePerformanceTests(
   d: Deserializer<any>,
 ): Promise<SerializePerformanceStats> {
-  const response = await fetch(`/${d.name}`, {
+  const response = await fetch(`/${d.endpoint}`, {
     headers: { "X-Zstd-Enabled": "true" },
   });
 
@@ -60,7 +66,7 @@ async function serializePerformanceTests(
     .getEntriesByType("resource")
     .findLast(
       (entry) =>
-        entry.entryType === "resource" && entry.name.endsWith(`/${d.name}`),
+        entry.entryType === "resource" && entry.name.endsWith(`/${d.endpoint}`),
     ) as unknown as PerformanceResourceTiming;
 
   const serializeDuration = parseInt(
@@ -71,9 +77,12 @@ async function serializePerformanceTests(
 
   // It's possible that repeatedly using deserialized like this may cause the JIT to optimize some
   // things in an unrealistic way.
+  performance.mark(`deserialize-${d.name}-start`);
   const deserializeStartTime = performance.now();
   const deserialized = await d.deserializeAll(body);
   const deserializeDuration = performance.now() - deserializeStartTime;
+  performance.mark(`deserialize-${d.name}-end`);
+  performance.measure(`deserialize-${d.name}`, `deserialize-${d.name}-start`, `deserialize-${d.name}-end`);
 
   const materializeVerifiedStartTime = performance.now();
   const materializedVerified = d.materializeVerifedAsPojo(deserialized);

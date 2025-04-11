@@ -10,6 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^2.2.5",
     "ajv": "^8.17.1",
     "assert": "^2.1.0",
     "avsc": "mtth/avsc#91d653f72906102448a059cb81692177bb678f52",
@@ -25,6 +26,7 @@
     "flatbuffers": "^25.2.10",
     "msgpackr": "^1.11.2",
     "path": "^0.12.7",
+    "pbf": "^4.0.1",
     "protobufjs": "^7.4.0",
     "stream": "^0.0.3",
     "stream-browserify": "^3.0.0",
@@ -32,6 +34,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@bufbuild/protoc-gen-es": "^2.2.5",
     "capnpc-ts": "^0.7.0",
     "esbuild": "^0.25.0",
     "protobufjs-cli": "^1.1.3"

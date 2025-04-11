@@ -9,6 +9,7 @@ import { ServerResponseAll, Trip } from "./trip.js";
 
 export const bebop: Deserializer<IServerResponseAll> = {
   name: "bebop" as const,
+  endpoint: "bebop",
   deserializeAll: (data: Uint8Array): IServerResponseAll => {
     return ServerResponseAllBebop.decode(data);
   },

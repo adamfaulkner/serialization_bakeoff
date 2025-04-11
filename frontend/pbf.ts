@@ -1,21 +1,21 @@
-import { load, Message } from "protobufjs";
+import Pbf from 'pbf';
 import { ServerResponseAll, Trip } from "./trip.js";
 import { Deserializer } from "./deserializer.js";
-import { trip_protobuf } from "./protobuf_trip.js";
+import { readServerResponseAll, MemberCasual, RideableType } from "./pbf_trip.js";
 
-export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
-  name: "proto" as const,
+export const pbf: Deserializer<any> = {
+  name: "pbf" as const,
   endpoint: "proto",
   deserializeAll: (data: Uint8Array) => {
-    return trip_protobuf.ServerResponseAll.decode(data);
+    return readServerResponseAll(new Pbf(data));
   },
   materializeUnverifiedAsPojo: (
-    deserialized: trip_protobuf.ServerResponseAll,
+    deserialized: any,
   ) => {
     // The values deserialized here are POJOs. The only differences from JSON are that each object
     // has a prototype that sets the default value for all fields, and dates are in milliseconds.
     return {
-      trips: deserialized.trips.map((trip) => {
+      trips: deserialized.trips.map((trip: any) => {
         return {
           ...trip,
           startedAt: new Date(trip.startedAtMs),
@@ -25,14 +25,14 @@ export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
     };
   },
   scanForIdProperty: (
-    deserialized: trip_protobuf.ServerResponseAll,
+    deserialized:any,
     targetId: string,
   ) => {
-    const trip = deserialized.trips.find((trip) => trip.rideId === targetId);
+    const trip = deserialized.trips.find((trip: any) => trip.rideId === targetId);
     return trip !== undefined;
   },
   materializeVerifedAsPojo: function (
-    deserialized: trip_protobuf.ServerResponseAll,
+    deserialized: any,
   ): ServerResponseAll {
     const trips: Array<Trip> = [];
     for (const trip of deserialized.trips) {
@@ -43,7 +43,7 @@ export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
       if (
         trip.rideableType === undefined ||
         trip.rideableType === null ||
-        trip.rideableType === trip_protobuf.RideableType.unknown_rideable_type
+        trip.rideableType === RideableType.unknown_rideable_type
       ) {
         throw new Error("Invalid rideableType");
       }
@@ -59,7 +59,7 @@ export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
       if (
         trip.memberCasual === undefined ||
         trip.memberCasual === null ||
-        trip.memberCasual === trip_protobuf.MemberCasual.unknown_member_casual
+        trip.memberCasual === MemberCasual.unknown_member_casual
       ) {
         throw new Error("Invalid memberCasual");
       }

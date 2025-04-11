@@ -34,6 +34,7 @@ export type AvroServerResponseAll = {
 
 export const avro: Deserializer<AvroServerResponseAll> = {
   name: "avro" as const,
+  endpoint: "avro",
   deserializeAll: function (data: Uint8Array): AvroServerResponseAll {
     performance.mark('avro-decode-start');
     const result = avroType.decode(data).value;

@@ -11,6 +11,7 @@ import { Deserializer } from "./deserializer.js";
 import { Ajv } from "ajv/dist/jtd.js";
 export const cbor: Deserializer<any> = {
   name: "cbor" as const,
+  endpoint: "cbor",
   deserializeAll: (data: Uint8Array) => {
     const decoder = new Decoder({ mapsAsObjects: true, int64AsNumber: true });
     return decoder.decode(data);

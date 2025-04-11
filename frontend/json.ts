@@ -12,6 +12,7 @@ import {
 
 export const json: Deserializer<any> = {
   name: "json" as const,
+  endpoint: "json",
   deserializeAll: (data: Uint8Array) => {
     const decoder = new TextDecoder();
     return JSON.parse(decoder.decode(data));

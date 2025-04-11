@@ -2,6 +2,7 @@ import { ServerResponseAll } from "./trip.js";
 
 export interface Deserializer<D> {
   name: string;
+  endpoint: string;
   deserializeAll: (data: Uint8Array) => D;
 
   materializeUnverifiedAsPojo: (deserialized: D) => ServerResponseAll;

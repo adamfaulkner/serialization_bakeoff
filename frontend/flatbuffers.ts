@@ -60,6 +60,7 @@ function materializeAsPojo(
 
 export const flatbuffers: Deserializer<ServerResponseAllFlatbuffers> = {
   name: "flatbuffers" as const,
+  endpoint: "flatbuffers",
   deserializeAll: (data: Uint8Array) => {
     const response = ServerResponseAllFlatbuffers.getRootAsServerResponseAll(
       new ByteBuffer(data),

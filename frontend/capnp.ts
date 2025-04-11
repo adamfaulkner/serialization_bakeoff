@@ -51,6 +51,7 @@ function materializeAsPojo(
 
 export const capnp: Deserializer<ServerResponseAllCapnp> = {
   name: "capnp" as const,
+  endpoint: "capnp",
   deserializeAll: (data: Uint8Array) => {
     const responseMessage = new Message(data, false, false);
     responseMessage._capnp.traversalLimit = Infinity;
