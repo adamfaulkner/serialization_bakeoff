@@ -14,16 +14,18 @@ import { renderCharts } from "./charts.js";
 
 // TODO: we really need to fix the string conversion piece for JSON.
 
-const DESERIALIZERS: Array<Deserializer<any>> = [
+const DESERIALIZERS: Array<Deserializer<any, boolean>> = [
   json,
   proto,
+  // slow and not good
   // protobufEs,
-  // pbf,
-  // msgpack,
-  // cbor,
-  // bebop,
-  //capnp,
-  // flatbuffers,
+  pbf,
+  msgpack,
+  cbor,
+  bebop,
+  // Too slow to be worth testing
+  // capnp,
+  flatbuffers,
   avro,
 ];
 
@@ -47,20 +49,20 @@ function sanityCheckMaterializedPojo(pojo: ServerResponseAll) {
 }
 
 async function serializePerformanceTests(
-  d: Deserializer<any>,
+  d: Deserializer<any, any>,
 ): Promise<SerializePerformanceStats> {
   const response = await fetch(`/${d.endpoint}`, {
     headers: { "X-Zstd-Enabled": "true" },
   });
 
   let body;
-  // if (d.name === 'json') {
-  if (false) {
+  const bodyReadStart = performance.now();
+  if (d.useText === true) {
     body = await response.text();
   } else {
     body = await response.bytes();
   }
-  // const bodyBytes = await response.bytes();
+  const bodyReadDuration = performance.now() - bodyReadStart;
 
   const resourceEntry: PerformanceResourceTiming = performance
     .getEntriesByType("resource")
@@ -107,6 +109,7 @@ async function serializePerformanceTests(
   return {
     name: d.name,
     serializeDuration,
+    bodyReadDuration,
     deserializeDuration,
     scanForIdPropertyDuration,
     materializeAsUnverifiedPojoDuration,

@@ -20,6 +20,7 @@
                                 "type": "enum",
                                 "name": "RideableType",
                                 "symbols": [
+                                    "unknown",
                                     "electric_bike",
                                     "classic_bike"
                                 ]
@@ -27,43 +28,44 @@
                         },
                         {
                             "name": "startedAt",
-                            "type": "long"
+                            "type": {"type": "long", "logicalType": "timestamp-millis"}
+
                         },
                         {
                             "name": "endedAt",
-                            "type": "long"
+                            "type": {"type": "long", "logicalType": "timestamp-millis"}
                         },
                         {
                             "name": "startStationName",
-                            "type": ["string", "null"]
+                            "type": ["string", {"type": "null", "logicalType": "missing"}]
                         },
                         {
                             "name": "startStationId",
-                            "type": ["string", "null"]
+                            "type": ["string", {"type": "null", "logicalType": "missing"}]
                         },
                         {
                             "name": "endStationName",
-                            "type": ["string", "null"]
+                            "type": ["string", {"type": "null", "logicalType": "missing"}]
                         },
                         {
                             "name": "endStationId",
-                            "type": ["string", "null"]
+                            "type": ["string", {"type": "null", "logicalType": "missing"}]
                         },
                         {
                             "name": "startLat",
-                            "type": ["double", "null"]
+                            "type": ["double", {"type": "null", "logicalType": "missing"}]
                         },
                         {
                             "name": "startLng",
-                            "type": ["double", "null"]
+                            "type": ["double", {"type": "null", "logicalType": "missing"}]
                         },
                         {
                             "name": "endLat",
-                            "type": ["double", "null"]
+                            "type": ["double", {"type": "null", "logicalType": "missing"}]
                         },
                         {
                             "name": "endLng",
-                            "type": ["double", "null"]
+                            "type": ["double", {"type": "null", "logicalType": "missing"}]
                         },
                         {
                             "name": "memberCasual",
@@ -71,6 +73,7 @@
                                 "type": "enum",
                                 "name": "MemberCasual",
                                 "symbols": [
+                                    "unknown",
                                     "member",
                                     "casual"
                                 ]

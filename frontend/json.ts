@@ -10,13 +10,12 @@ import {
   serverResponseAllReceivedJsonAjvSchema,
 } from "./trip.js";
 
-export const json: Deserializer<any> = {
+export const json: Deserializer<any, true> = {
   name: "json" as const,
   endpoint: "json",
-  deserializeAll: (data: Uint8Array) => {
-    const decoder = new TextDecoder();
-    return JSON.parse(decoder.decode(data));
-    // return JSON.parse(data);
+  useText: true,
+  deserializeAll: (data: string) => {
+    return JSON.parse(data);
   },
   materializeUnverifiedAsPojo: (deserialized: any): ServerResponseAll => {
     // The JSON dates are represented as strings.
@@ -42,7 +41,6 @@ export const json: Deserializer<any> = {
   },
   materializeVerifedAsPojo: function (deserialized: any): ServerResponseAll {
     // JSON could return anything; we validate everything using the ajv validator
-    const ajv = new Ajv();
     performance.mark("json-verify-start");
     const result = serverResponseAllReceivedAjvValidator(deserialized);
     if (!result) {

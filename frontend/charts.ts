@@ -98,6 +98,20 @@ export function renderCharts(
     },
   });
 
+  new Chart(getCanvasElement("bodyReadDuration"), {
+    type: "bar",
+    data: {
+      labels: filteredPerformanceStats.map((s) => s.name),
+      datasets: [
+        {
+          label: "Body Read Duration",
+          data: filteredPerformanceStats.map((s) => s.bodyReadDuration),
+          ...defaultChartOptions,
+        },
+      ],
+    },
+  });
+
   new Chart(getCanvasElement("deserializationTime"), {
     type: "bar",
     data: {

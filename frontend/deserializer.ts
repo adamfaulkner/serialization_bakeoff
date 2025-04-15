@@ -1,10 +1,10 @@
 import { ServerResponseAll } from "./trip.js";
 
-export interface Deserializer<D> {
+export interface Deserializer<D, UseText = false> {
   name: string;
   endpoint: string;
-  deserializeAll: (data: Uint8Array) => D;
-
+  useText?: UseText;
+  deserializeAll: (data: UseText extends true ? string : Uint8Array) => D;
   materializeUnverifiedAsPojo: (deserialized: D) => ServerResponseAll;
   scanForIdProperty: (deserialized: D, targetId: string) => boolean;
   materializeVerifedAsPojo: (deserialized: D) => ServerResponseAll;
