@@ -18,18 +18,12 @@ export const json: Deserializer<any, true> = {
     return JSON.parse(data);
   },
   materializeUnverifiedAsPojo: (deserialized: any): ServerResponseAll => {
-    // The JSON dates are represented as strings.
+    // Convert the numeric enum values directly
     return {
       trips: deserialized.trips.map((trip: any) => ({
         ...trip,
-        rideableType:
-          trip.rideableType === "classic_bike"
-            ? RideableType.classic
-            : RideableType.electric,
-        memberCasual:
-          trip.memberCasual === "member"
-            ? MemberCasual.member
-            : MemberCasual.casual,
+        rideableType: trip.rideableType, // Already numeric values (1 for electric, 2 for classic)
+        memberCasual: trip.memberCasual, // Already numeric values (1 for member, 2 for casual)
         startedAt: new Date(trip.startedAt),
         endedAt: new Date(trip.endedAt),
       })),

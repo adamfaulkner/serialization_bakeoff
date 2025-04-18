@@ -76,8 +76,8 @@ export type ServerResponseAll = {
 export const tripReceivedJsonSchema = z.object({
   rideId: z.string().nonempty(),
   rideableType: z.union([
-    z.literal("electric_bike"),
-    z.literal("classic_bike"),
+    z.literal(1), // electric_bike
+    z.literal(2), // classic_bike
   ]),
   startedAt: z.union([z.number(), z.bigint()]),
   endedAt: z.union([z.number(), z.bigint()]),
@@ -91,16 +91,16 @@ export const tripReceivedJsonSchema = z.object({
   startLng: z.number().optional(),
   endLat: z.number().optional(),
   endLng: z.number().optional(),
-  memberCasual: z.union([z.literal("member"), z.literal("casual")]),
+  memberCasual: z.union([z.literal(1), z.literal(2)]), // member, casual
 });
 
 const tripReceivedJsonAjvSchema = {
   properties: {
     rideId: { type: "string" },
-    rideableType: { enum: ["electric_bike", "classic_bike"] },
+    rideableType: { type: "uint8" }, // Use uint8 for numeric enum values
     startedAt: { type: "float64" },
     endedAt: { type: "float64" },
-    memberCasual: { enum: ["member", "casual"] },
+    memberCasual: { type: "uint8" }, // Use uint8 for numeric enum values
   },
   optionalProperties: {
     startStationName: { type: "string" },

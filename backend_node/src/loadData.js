@@ -13,21 +13,48 @@ export async function loadData() {
       .pipe(csvParser())
       .on('data', (row) => {
         // Parse and transform the CSV data into Trip objects
+        // Create base trip object
         const trip = {
           rideId: row.ride_id,
           rideableType: stringToRideableType(row.rideable_type),
-          startedAtMs: parseDateTime(row.started_at),
-          endedAtMs: parseDateTime(row.ended_at),
-          startStationName: row.start_station_name || null,
-          startStationId: row.start_station_id || null,
-          endStationName: row.end_station_name || null,
-          endStationId: row.end_station_id || null,
-          startLat: row.start_lat ? parseFloat(row.start_lat) : null,
-          startLng: row.start_lng ? parseFloat(row.start_lng) : null,
-          endLat: row.end_lat ? parseFloat(row.end_lat) : null,
-          endLng: row.end_lng ? parseFloat(row.end_lng) : null,
+          startedAt: parseDateTime(row.started_at),
+          endedAt: parseDateTime(row.ended_at),
           memberCasual: stringToMemberCasual(row.member_casual)
         };
+
+        // Add optional fields only if they exist and are not empty
+        if (row.start_station_name && row.start_station_name.trim()) {
+          trip.startStationName = row.start_station_name;
+        }
+        
+        if (row.start_station_id && row.start_station_id.trim()) {
+          trip.startStationId = String(row.start_station_id);
+        }
+        
+        if (row.end_station_name && row.end_station_name.trim()) {
+          trip.endStationName = row.end_station_name;
+        }
+        
+        if (row.end_station_id && row.end_station_id.trim()) {
+          trip.endStationId = String(row.end_station_id);
+        }
+
+        // Add latitude and longitude fields if they exist
+        if (row.start_lat && !isNaN(parseFloat(row.start_lat))) {
+          trip.startLat = parseFloat(row.start_lat);
+        }
+        
+        if (row.start_lng && !isNaN(parseFloat(row.start_lng))) {
+          trip.startLng = parseFloat(row.start_lng);
+        }
+        
+        if (row.end_lat && !isNaN(parseFloat(row.end_lat))) {
+          trip.endLat = parseFloat(row.end_lat);
+        }
+        
+        if (row.end_lng && !isNaN(parseFloat(row.end_lng))) {
+          trip.endLng = parseFloat(row.end_lng);
+        }
         
         trips.push(trip);
       })

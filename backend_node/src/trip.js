@@ -11,19 +11,6 @@ export const MemberCasual = {
   CASUAL: 2
 };
 
-// String representations for enum values
-export const RideableTypeStrings = {
-  [RideableType.UNKNOWN_RIDEABLE_TYPE]: "unknown_rideable_type",
-  [RideableType.ELECTRIC_BIKE]: "electric_bike",
-  [RideableType.CLASSIC_BIKE]: "classic_bike"
-};
-
-export const MemberCasualStrings = {
-  [MemberCasual.UNKNOWN_MEMBER_CASUAL]: "unknown_member_casual",
-  [MemberCasual.MEMBER]: "member",
-  [MemberCasual.CASUAL]: "casual"
-};
-
 // Helper function to convert string to RideableType enum
 export function stringToRideableType(str) {
   if (!str) return RideableType.UNKNOWN_RIDEABLE_TYPE;
@@ -50,14 +37,4 @@ export function parseDateTime(dateTimeStr) {
   
   const dateObj = new Date(dateTimeStr);
   return dateObj.getTime();
-}
-
-// Convert RideableType enum to string
-export function rideableTypeToString(enumValue) {
-  return RideableTypeStrings[enumValue] || RideableTypeStrings[RideableType.UNKNOWN_RIDEABLE_TYPE];
-}
-
-// Convert MemberCasual enum to string
-export function memberCasualToString(enumValue) {
-  return MemberCasualStrings[enumValue] || MemberCasualStrings[MemberCasual.UNKNOWN_MEMBER_CASUAL];
 }

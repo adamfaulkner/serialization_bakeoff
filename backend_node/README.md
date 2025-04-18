@@ -1,19 +1,32 @@
-# Node.js Backend for Serialization Bakeoff
+# TypeScript Node.js Backend for Serialization Bakeoff
 
-This is a Node.js implementation of the serialization bakeoff backend service.
+This is a TypeScript implementation of the serialization bakeoff backend service.
 
 ## Setup
 
 ```bash
 # Install dependencies
 npm install
+
+# Build the TypeScript code
+npm run build
+```
+
+## Development
+
+```bash
+# Start in watch mode (auto-rebuilds on changes)
+npm run watch
+
+# Run the server with auto-restart on changes
+npm run dev
 ```
 
 ## Running the Server
 
 ```bash
-# Start the server
-npm start
+# Build and start the server
+npm run build && npm start
 ```
 
 The server will start on port 3001 (https://localhost:3001) to avoid conflicts with the Rust backend on port 3000.
@@ -38,6 +51,8 @@ The following endpoints are placeholders and not yet implemented:
 - Supports compression (when `X-Zstd-Enabled: true` header is provided)
 - Implements HTTPS with the same self-signed certificates
 
-## Performance
+## Build System
 
-This Node.js implementation allows for comparing serialization performance between Node.js and Rust implementations.
+- Uses esbuild for fast bundling
+- TypeScript for type safety
+- Outputs ESM modules for Node.js
