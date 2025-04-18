@@ -4,11 +4,23 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::generated::trip as bebop_trip;
 use crate::{trip_capnp, trip_flatbuffer, trip_protobuf};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RideableType {
     ElectricBike,
     ClassicBike,
+}
+
+impl Serialize for RideableType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            RideableType::ElectricBike => serializer.serialize_u8(1),
+            RideableType::ClassicBike => serializer.serialize_u8(2),
+        }
+    }
 }
 
 impl From<&RideableType> for trip_protobuf::RideableType {
@@ -47,11 +59,23 @@ impl From<&RideableType> for trip_flatbuffer::trip::RideableType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MemberCasual {
     Member,
     Casual,
+}
+
+impl Serialize for MemberCasual {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            MemberCasual::Member => serializer.serialize_u8(1),
+            MemberCasual::Casual => serializer.serialize_u8(2),
+        }
+    }
 }
 
 impl From<&MemberCasual> for trip_protobuf::MemberCasual {
