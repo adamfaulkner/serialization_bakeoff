@@ -1,11 +1,11 @@
 import { ServerResponseAll, tripSchema } from "./trip.js";
 import { json } from "./json.js";
-import { proto } from "./proto.js";
+import { proto, updatedProto } from "./proto.js";
 import { protobufEs } from "./protobuf_es.js";
 import { pbf } from "./pbf.js";
 import { msgpack } from "./msgpack.js";
 import { bebop } from "./bebop.js";
-import { avro } from "./avro.js";
+import { currentAvro, newAvro } from "./avro.js";
 import { cbor } from "./cbor.js";
 import { capnp } from "./capnp.js";
 import { flatbuffers } from "./flatbuffers.js";
@@ -17,6 +17,7 @@ import { renderCharts } from "./charts.js";
 const DESERIALIZERS: Array<Deserializer<any, boolean>> = [
   json,
   proto,
+  updatedProto,
   // slow and not good
   // protobufEs,
   pbf,
@@ -24,9 +25,10 @@ const DESERIALIZERS: Array<Deserializer<any, boolean>> = [
   cbor,
   bebop,
   // Too slow to be worth testing
-  // capnp,
+  capnp,
   flatbuffers,
-  avro,
+  currentAvro,
+  newAvro,
 ];
 
 function sanityCheckMaterializedPojo(pojo: ServerResponseAll) {
@@ -51,6 +53,9 @@ function sanityCheckMaterializedPojo(pojo: ServerResponseAll) {
 async function serializePerformanceTests(
   d: Deserializer<any, any>,
 ): Promise<SerializePerformanceStats> {
+
+  const overallStartTime = performance.now();
+
   const response = await fetch(`/${d.endpoint}`, {
     headers: { "X-Zstd-Enabled": "true" },
   });
@@ -86,6 +91,12 @@ async function serializePerformanceTests(
   performance.mark(`deserialize-${d.name}-end`);
   performance.measure(`deserialize-${d.name}`, `deserialize-${d.name}-start`, `deserialize-${d.name}-end`);
 
+  const materializeAsUnverifiedPojoStartTime = performance.now();
+  const materializedUnverified = d.materializeUnverifiedAsPojo(deserialized);
+  const materializeAsUnverifiedPojoDuration =
+    performance.now() - materializeAsUnverifiedPojoStartTime;
+  const endToEndMaterializeUnverifiedPojoDuration = performance.now() - overallStartTime;
+
   const materializeVerifiedStartTime = performance.now();
   const materializedVerified = d.materializeVerifedAsPojo(deserialized);
   const materializeAsVerifiedPojoDuration =
@@ -100,10 +111,6 @@ async function serializePerformanceTests(
     throw new Error("Scan result should always be false");
   }
 
-  const materializeAsUnverifiedPojoStartTime = performance.now();
-  const materializedUnverified = d.materializeUnverifiedAsPojo(deserialized);
-  const materializeAsUnverifiedPojoDuration =
-    performance.now() - materializeAsUnverifiedPojoStartTime;
   sanityCheckMaterializedPojo(materializedUnverified);
 
   return {
@@ -111,6 +118,7 @@ async function serializePerformanceTests(
     serializeDuration,
     bodyReadDuration,
     deserializeDuration,
+    endToEndMaterializeUnverifiedPojoDuration,
     scanForIdPropertyDuration,
     materializeAsUnverifiedPojoDuration,
     size: body.length,

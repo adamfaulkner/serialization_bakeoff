@@ -35,6 +35,18 @@ const defaultChartOptions = {
   borderWidth: 1,
 };
 
+function pickPerformanceStats(performanceStats: Array<SerializePerformanceStats>, picks: Array<string>): Array<SerializePerformanceStats> {
+  const result: Array<SerializePerformanceStats> = [];
+  for (const pick of picks) {
+    const found = performanceStats.find((stat) => stat.name === pick);
+    if (found === undefined) {
+      throw new Error(`No ${pick}`);
+    }
+    result.push(found);
+  }
+  return result;
+}
+
 export function renderCharts(
   performanceStats: Array<SerializePerformanceStats>,
 ) {
@@ -42,28 +54,47 @@ export function renderCharts(
     (stat) => !hideCapnpCheckbox.checked || stat.name !== "capnp",
   );
 
+  const sizePerformanceStats = pickPerformanceStats(filteredPerformanceStats, ["json", "proto", "msgpack", "cbor", "bebop", "capnp", "flatbuffers", "avro"]);
+
   new Chart(getCanvasElement("sizes"), {
     type: "bar",
     data: {
-      labels: filteredPerformanceStats.map((s) => s.name),
+      labels: sizePerformanceStats.map((ps) => ps.name),
       datasets: [
         {
           label: "Serialized Size",
-          data: filteredPerformanceStats.map((s) => s.size),
+          data: sizePerformanceStats.map((s) => s.size),
           ...defaultChartOptions,
         },
       ],
     },
   });
 
+  const frontRunnerStats = pickPerformanceStats(filteredPerformanceStats, ["json", "updated proto", "bebop", "updated avro", "msgpack", "cbor", "flatbuffers"])
+
+  new Chart(getCanvasElement("endToEndClientSideUnverifiedPojo"), {
+    type: "bar",
+    data: {
+      labels: frontRunnerStats.map((s) => s.name),
+      datasets: [
+        {
+          label: "End to End client side deserialize (milliseconds)",
+          data: frontRunnerStats.map((s) => s.endToEndMaterializeUnverifiedPojoDuration - s.serializeDuration - s.zstdDuration),
+          ...defaultChartOptions,
+        },
+      ],
+    },
+  })
+
+
   new Chart(getCanvasElement("compressedSizes"), {
     type: "bar",
     data: {
-      labels: filteredPerformanceStats.map((s) => s.name),
+      labels: sizePerformanceStats.map((s) => s.name),
       datasets: [
         {
           label: "Compressed Size",
-          data: filteredPerformanceStats.map((s) => s.zstdCompressedSize),
+          data: sizePerformanceStats.map((s) => s.zstdCompressedSize),
           ...defaultChartOptions,
         },
       ],
@@ -76,7 +107,7 @@ export function renderCharts(
       labels: filteredPerformanceStats.map((s) => s.name),
       datasets: [
         {
-          label: "Serialize Duration",
+          label: "Serialize Duration (milliseconds)",
           data: filteredPerformanceStats.map((s) => s.serializeDuration),
           ...defaultChartOptions,
         },
@@ -87,11 +118,11 @@ export function renderCharts(
   new Chart(getCanvasElement("zstdDuration"), {
     type: "bar",
     data: {
-      labels: filteredPerformanceStats.map((s) => s.name),
+      labels: sizePerformanceStats.map((s) => s.name),
       datasets: [
         {
-          label: "Zstd Duration",
-          data: filteredPerformanceStats.map((s) => s.zstdDuration),
+          label: "Compression Duration (milliseconds)",
+          data: sizePerformanceStats.map((s) => s.zstdDuration),
           ...defaultChartOptions,
         },
       ],
@@ -101,11 +132,11 @@ export function renderCharts(
   new Chart(getCanvasElement("bodyReadDuration"), {
     type: "bar",
     data: {
-      labels: filteredPerformanceStats.map((s) => s.name),
+      labels: frontRunnerStats.map((s) => s.name),
       datasets: [
         {
-          label: "Body Read Duration",
-          data: filteredPerformanceStats.map((s) => s.bodyReadDuration),
+          label: "Body Read Duration (milliseconds)",
+          data: frontRunnerStats.map((s) => s.bodyReadDuration),
           ...defaultChartOptions,
         },
       ],
@@ -126,36 +157,19 @@ export function renderCharts(
     },
   });
 
-  new Chart(getCanvasElement("materializeUnverified"), {
-    type: "bar",
-    data: {
-      labels: filteredPerformanceStats.map((s) => s.name),
-      datasets: [
-        {
-          label: "End to End Duration to materialize an unverified JS Object",
-          data: filteredPerformanceStats.map(
-            (s) =>
-              s.serializeDuration +
-              s.deserializeDuration +
-              s.materializeAsUnverifiedPojoDuration,
-          ),
-          ...defaultChartOptions,
-        },
-      ],
-    },
-  });
-
   new Chart(getCanvasElement("materializeVerified"), {
     type: "bar",
     data: {
-      labels: filteredPerformanceStats.map((s) => s.name),
+      labels: frontRunnerStats.map((s) => s.name),
       datasets: [
         {
-          label: "End to End Duration to materialize a verified JS Object",
-          data: filteredPerformanceStats.map(
+          label: "End to End client side deserialize and verify (milliseconds)",
+          data: frontRunnerStats.map(
             (s) =>
-              s.serializeDuration +
-              s.deserializeDuration +
+              s.endToEndMaterializeUnverifiedPojoDuration -
+              s.serializeDuration -
+              s.zstdDuration -
+              s.materializeAsUnverifiedPojoDuration +
               s.materializeAsVerifiedPojoDuration,
           ),
           ...defaultChartOptions,
@@ -167,15 +181,71 @@ export function renderCharts(
   new Chart(getCanvasElement("endToEndScanForProperty"), {
     type: "bar",
     data: {
-      labels: filteredPerformanceStats.map((s) => s.name),
+      labels: frontRunnerStats.map((s) => s.name),
       datasets: [
         {
-          label: "End to End Duration to Scan for a single Property",
-          data: filteredPerformanceStats.map(
+          label: "Duration to Scan for a single Property (milliseconds)",
+          data: frontRunnerStats.map(
             (s) =>
-              s.serializeDuration +
               s.deserializeDuration +
               s.scanForIdPropertyDuration,
+          ),
+          ...defaultChartOptions,
+        },
+      ],
+    },
+  });
+
+  const avroStats = pickPerformanceStats(filteredPerformanceStats, ["avro", "updated avro"])
+
+  new Chart(getCanvasElement("newAvroVsOld"), {
+    type: "bar",
+    data: {
+      labels: avroStats.map((s) => s.name),
+      datasets: [
+        {
+          label: "New Avro vs Current Implementation -- Deserialization (milliseconds)",
+          data: avroStats.map(
+            (s) =>
+              s.deserializeDuration
+          ),
+          ...defaultChartOptions,
+        },
+      ],
+    },
+  });
+
+  const protobufStats = pickPerformanceStats(filteredPerformanceStats, ["proto", "updated proto"])
+
+  new Chart(getCanvasElement("newProtobufVsOld"), {
+    type: "bar",
+    data: {
+      labels: protobufStats.map((s) => s.name),
+      datasets: [
+        {
+          label: "New Protobuf vs Current Implementation -- Deserialization (milliseconds)",
+          data: protobufStats.map(
+            (s) =>
+              s.deserializeDuration
+          ),
+          ...defaultChartOptions,
+        },
+      ],
+    },
+  });
+
+  const capnpStats = pickPerformanceStats(filteredPerformanceStats, ["json", "proto", "capnp"])
+
+  new Chart(getCanvasElement("capnpStats"), {
+    type: "bar",
+    data: {
+      labels: capnpStats.map((s) => s.name),
+      datasets: [
+        {
+          label: "End to End client side deserialize (milliseconds)",
+          data: capnpStats.map(
+            (s) =>
+              s.endToEndMaterializeUnverifiedPojoDuration - s.serializeDuration - s.zstdDuration
           ),
           ...defaultChartOptions,
         },

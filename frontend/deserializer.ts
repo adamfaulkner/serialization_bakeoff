@@ -12,7 +12,9 @@ export interface Deserializer<D, UseText = false> {
 
 export type SerializePerformanceStats = {
   name: string;
+  endToEndMaterializeUnverifiedPojoDuration: number;
   deserializeDuration: number;
+  bodyReadDuration: number;
   serializeDuration: number;
   scanForIdPropertyDuration: number;
   materializeAsUnverifiedPojoDuration: number;

@@ -2,6 +2,7 @@ import { load, Message } from "protobufjs";
 import { ServerResponseAll, Trip } from "./trip.js";
 import { Deserializer } from "./deserializer.js";
 import { trip_protobuf } from "./protobuf_trip.js";
+import { trip_protobuf as updated_trip_protobuf } from "./updated_protobuf_trip.js";
 
 export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
   name: "proto" as const,
@@ -72,3 +73,11 @@ export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
     return { trips };
   },
 };
+
+export const updatedProto: Deserializer<trip_protobuf.ServerResponseAll> = {
+  ...proto,
+  name: "updated proto",
+  deserializeAll: (data: Uint8Array) => {
+    return updated_trip_protobuf.ServerResponseAll.decode(data);
+  },
+}
