@@ -25,7 +25,7 @@ const DESERIALIZERS: Array<Deserializer<any, boolean>> = [
   cbor,
   bebop,
   // Too slow to be worth testing
-  capnp,
+  // capnp,
   flatbuffers,
   currentAvro,
   newAvro,
@@ -128,16 +128,38 @@ async function serializePerformanceTests(
   };
 }
 
+const numTrials = 10;
+
 async function runSerializePerformanceTests(): Promise<
   Array<SerializePerformanceStats>
 > {
   const results = [];
   // These must happen sequentially to avoid event loop contention on the client side.
   for (const d of DESERIALIZERS) {
-    results.push(await serializePerformanceTests(d));
+    const trials = [];
+    for (let i = 0; i < numTrials; i++) {
+      trials.push(await serializePerformanceTests(d));
+    }
+
+    const average: SerializePerformanceStats = {
+      name: d.name,
+      endToEndMaterializeUnverifiedPojoDuration: trials.reduce((a, b) => a + b.endToEndMaterializeUnverifiedPojoDuration, 0) / numTrials,
+      deserializeDuration: trials.reduce((a, b) => a + b.deserializeDuration, 0) / numTrials,
+      bodyReadDuration: trials.reduce((a, b) => a + b.bodyReadDuration, 0) / numTrials,
+      serializeDuration: trials.reduce((a, b) => a + b.serializeDuration, 0) / numTrials,
+      scanForIdPropertyDuration: trials.reduce((a, b) => a + b.scanForIdPropertyDuration, 0) / numTrials,
+      materializeAsUnverifiedPojoDuration: trials.reduce((a, b) => a + b.materializeAsUnverifiedPojoDuration, 0) / numTrials,
+      size: trials.reduce((a, b) => a + b.size, 0) / numTrials,
+      zstdCompressedSize: trials.reduce((a, b) => a + b.zstdCompressedSize, 0) / numTrials,
+      zstdDuration: trials.reduce((a, b) => a + b.zstdDuration, 0) / numTrials,
+      materializeAsVerifiedPojoDuration: trials.reduce((a, b) => a + b.materializeAsVerifiedPojoDuration, 0) / numTrials,
+    }
+    results.push(average);
   }
   return results;
 }
 
 const performanceStats = await runSerializePerformanceTests();
-renderCharts(performanceStats);
+//renderCharts(performanceStats);
+
+document.getElementById("data")!.textContent = JSON.stringify(performanceStats);
