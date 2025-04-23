@@ -25,7 +25,7 @@ const DESERIALIZERS: Array<Deserializer<any, boolean>> = [
   cbor,
   bebop,
   // Too slow to be worth testing
-  // capnp,
+  capnp,
   flatbuffers,
   currentAvro,
   newAvro,
@@ -160,6 +160,6 @@ async function runSerializePerformanceTests(): Promise<
 }
 
 const performanceStats = await runSerializePerformanceTests();
-//renderCharts(performanceStats);
+renderCharts(performanceStats);
 
 document.getElementById("data")!.textContent = JSON.stringify(performanceStats);
