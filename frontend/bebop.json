@@ -1,8 +1,8 @@
 {
-  "include": ["../schemas/**/*.bop"],
-  "generators": {
-    "ts": {
-      "outFile": "bops.gen.ts"
-    }
-  }
+	"include": ["../schemas/**/*.bop"],
+	"generators": {
+		"ts": {
+			"outFile": "bops.gen.ts"
+		}
+	}
 }

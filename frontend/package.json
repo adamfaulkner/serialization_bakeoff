@@ -1,44 +1,44 @@
 {
-  "name": "frontend",
-  "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
-  "type": "module",
-  "main": "code.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "@bufbuild/protobuf": "^2.2.5",
-    "ajv": "^8.17.1",
-    "assert": "^2.1.0",
-    "production_avsc": "mtth/avsc#778f8daa057b39b9538ebaa04f7c382bd95482b2",
-    "new_avsc": "mtth/avsc#91d653f72906102448a059cb81692177bb678f52",
-    "bebop": "^3.1.3",
-    "bebop-tools": "^3.1.3",
-    "browserify-zlib": "^0.2.0",
-    "buffer": "^6.0.3",
-    "capnp-es": "^0.0.7",
-    "capnp-ts": "^0.7.0",
-    "cbor-x": "^1.6.0",
-    "chart.js": "^4.4.8",
-    "events": "^3.3.0",
-    "flatbuffers": "^25.2.10",
-    "msgpackr": "^1.11.2",
-    "path": "^0.12.7",
-    "pbf": "^4.0.1",
-    "protobufjs": "7.5.0",
-    "updated_protobufjs": "adamfaulkner/protobuf.js#af-hackForUtf8Benchmarking",
-    "stream": "^0.0.3",
-    "stream-browserify": "^3.0.0",
-    "util": "^0.12.5",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@bufbuild/protoc-gen-es": "^2.2.5",
-    "capnpc-ts": "^0.7.0",
-    "esbuild": "^0.25.0",
-    "protobufjs-cli": "^1.1.3"
-  }
+	"name": "frontend",
+	"version": "1.0.0",
+	"description": "",
+	"license": "ISC",
+	"author": "",
+	"type": "module",
+	"main": "code.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"dependencies": {
+		"@bufbuild/protobuf": "^2.2.5",
+		"ajv": "^8.17.1",
+		"assert": "^2.1.0",
+		"production_avsc": "mtth/avsc#778f8daa057b39b9538ebaa04f7c382bd95482b2",
+		"new_avsc": "mtth/avsc#91d653f72906102448a059cb81692177bb678f52",
+		"bebop": "^3.1.3",
+		"bebop-tools": "^3.1.3",
+		"browserify-zlib": "^0.2.0",
+		"buffer": "^6.0.3",
+		"capnp-es": "^0.0.7",
+		"capnp-ts": "^0.7.0",
+		"cbor-x": "^1.6.0",
+		"chart.js": "^4.4.8",
+		"events": "^3.3.0",
+		"flatbuffers": "^25.2.10",
+		"msgpackr": "^1.11.2",
+		"path": "^0.12.7",
+		"pbf": "^4.0.1",
+		"protobufjs": "7.5.0",
+		"updated_protobufjs": "adamfaulkner/protobuf.js#af-hackForUtf8Benchmarking",
+		"stream": "^0.0.3",
+		"stream-browserify": "^3.0.0",
+		"util": "^0.12.5",
+		"zod": "^3.24.2"
+	},
+	"devDependencies": {
+		"@bufbuild/protoc-gen-es": "^2.2.5",
+		"capnpc-ts": "^0.7.0",
+		"esbuild": "^0.25.0",
+		"protobufjs-cli": "^1.1.3"
+	}
 }

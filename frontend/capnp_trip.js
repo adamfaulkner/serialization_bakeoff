@@ -2,130 +2,130 @@
 import * as $ from "capnp-es";
 export const _capnpFileId = BigInt("0xea5a8c37a1dc24de");
 export const RideableType = {
-  UNKNOWN_RIDEABLE_TYPE: 0,
-  ELECTRIC_BIKE: 1,
-  CLASSIC_BIKE: 2
+	UNKNOWN_RIDEABLE_TYPE: 0,
+	ELECTRIC_BIKE: 1,
+	CLASSIC_BIKE: 2,
 };
 export const MemberCasual = {
-  UNKNOWN_MEMBER_CASUAL: 0,
-  MEMBER: 1,
-  CASUAL: 2
+	UNKNOWN_MEMBER_CASUAL: 0,
+	MEMBER: 1,
+	CASUAL: 2,
 };
 export class Trip extends $.Struct {
-  static _capnp = {
-    displayName: "Trip",
-    id: "923fdeee6e7a9a4d",
-    size: new $.ObjectSize(56, 5)
-  };
-  get rideId() {
-    return $.utils.getText(0, this);
-  }
-  set rideId(value) {
-    $.utils.setText(0, value, this);
-  }
-  get rideableType() {
-    return $.utils.getUint16(0, this);
-  }
-  set rideableType(value) {
-    $.utils.setUint16(0, value, this);
-  }
-  get startedAtMs() {
-    return $.utils.getInt64(8, this);
-  }
-  set startedAtMs(value) {
-    $.utils.setInt64(8, value, this);
-  }
-  get endedAtMs() {
-    return $.utils.getInt64(16, this);
-  }
-  set endedAtMs(value) {
-    $.utils.setInt64(16, value, this);
-  }
-  get startStationName() {
-    return $.utils.getText(1, this);
-  }
-  set startStationName(value) {
-    $.utils.setText(1, value, this);
-  }
-  get startStationId() {
-    return $.utils.getText(2, this);
-  }
-  set startStationId(value) {
-    $.utils.setText(2, value, this);
-  }
-  get endStationName() {
-    return $.utils.getText(3, this);
-  }
-  set endStationName(value) {
-    $.utils.setText(3, value, this);
-  }
-  get endStationId() {
-    return $.utils.getText(4, this);
-  }
-  set endStationId(value) {
-    $.utils.setText(4, value, this);
-  }
-  get startLat() {
-    return $.utils.getFloat64(24, this);
-  }
-  set startLat(value) {
-    $.utils.setFloat64(24, value, this);
-  }
-  get startLng() {
-    return $.utils.getFloat64(32, this);
-  }
-  set startLng(value) {
-    $.utils.setFloat64(32, value, this);
-  }
-  get endLat() {
-    return $.utils.getFloat64(40, this);
-  }
-  set endLat(value) {
-    $.utils.setFloat64(40, value, this);
-  }
-  get endLng() {
-    return $.utils.getFloat64(48, this);
-  }
-  set endLng(value) {
-    $.utils.setFloat64(48, value, this);
-  }
-  get memberCasual() {
-    return $.utils.getUint16(2, this);
-  }
-  set memberCasual(value) {
-    $.utils.setUint16(2, value, this);
-  }
-  toString() {
-    return "Trip_" + super.toString();
-  }
+	static _capnp = {
+		displayName: "Trip",
+		id: "923fdeee6e7a9a4d",
+		size: new $.ObjectSize(56, 5),
+	};
+	get rideId() {
+		return $.utils.getText(0, this);
+	}
+	set rideId(value) {
+		$.utils.setText(0, value, this);
+	}
+	get rideableType() {
+		return $.utils.getUint16(0, this);
+	}
+	set rideableType(value) {
+		$.utils.setUint16(0, value, this);
+	}
+	get startedAtMs() {
+		return $.utils.getInt64(8, this);
+	}
+	set startedAtMs(value) {
+		$.utils.setInt64(8, value, this);
+	}
+	get endedAtMs() {
+		return $.utils.getInt64(16, this);
+	}
+	set endedAtMs(value) {
+		$.utils.setInt64(16, value, this);
+	}
+	get startStationName() {
+		return $.utils.getText(1, this);
+	}
+	set startStationName(value) {
+		$.utils.setText(1, value, this);
+	}
+	get startStationId() {
+		return $.utils.getText(2, this);
+	}
+	set startStationId(value) {
+		$.utils.setText(2, value, this);
+	}
+	get endStationName() {
+		return $.utils.getText(3, this);
+	}
+	set endStationName(value) {
+		$.utils.setText(3, value, this);
+	}
+	get endStationId() {
+		return $.utils.getText(4, this);
+	}
+	set endStationId(value) {
+		$.utils.setText(4, value, this);
+	}
+	get startLat() {
+		return $.utils.getFloat64(24, this);
+	}
+	set startLat(value) {
+		$.utils.setFloat64(24, value, this);
+	}
+	get startLng() {
+		return $.utils.getFloat64(32, this);
+	}
+	set startLng(value) {
+		$.utils.setFloat64(32, value, this);
+	}
+	get endLat() {
+		return $.utils.getFloat64(40, this);
+	}
+	set endLat(value) {
+		$.utils.setFloat64(40, value, this);
+	}
+	get endLng() {
+		return $.utils.getFloat64(48, this);
+	}
+	set endLng(value) {
+		$.utils.setFloat64(48, value, this);
+	}
+	get memberCasual() {
+		return $.utils.getUint16(2, this);
+	}
+	set memberCasual(value) {
+		$.utils.setUint16(2, value, this);
+	}
+	toString() {
+		return "Trip_" + super.toString();
+	}
 }
 export class ServerResponseAll extends $.Struct {
-  static _capnp = {
-    displayName: "ServerResponseAll",
-    id: "af9b587efc9700d0",
-    size: new $.ObjectSize(0, 1)
-  };
-  static _Trips;
-  _adoptTrips(value) {
-    $.utils.adopt(value, $.utils.getPointer(0, this));
-  }
-  _disownTrips() {
-    return $.utils.disown(this.trips);
-  }
-  get trips() {
-    return $.utils.getList(0, ServerResponseAll._Trips, this);
-  }
-  _hasTrips() {
-    return !$.utils.isNull($.utils.getPointer(0, this));
-  }
-  _initTrips(length) {
-    return $.utils.initList(0, ServerResponseAll._Trips, length, this);
-  }
-  set trips(value) {
-    $.utils.copyFrom(value, $.utils.getPointer(0, this));
-  }
-  toString() {
-    return "ServerResponseAll_" + super.toString();
-  }
+	static _capnp = {
+		displayName: "ServerResponseAll",
+		id: "af9b587efc9700d0",
+		size: new $.ObjectSize(0, 1),
+	};
+	static _Trips;
+	_adoptTrips(value) {
+		$.utils.adopt(value, $.utils.getPointer(0, this));
+	}
+	_disownTrips() {
+		return $.utils.disown(this.trips);
+	}
+	get trips() {
+		return $.utils.getList(0, ServerResponseAll._Trips, this);
+	}
+	_hasTrips() {
+		return !$.utils.isNull($.utils.getPointer(0, this));
+	}
+	_initTrips(length) {
+		return $.utils.initList(0, ServerResponseAll._Trips, length, this);
+	}
+	set trips(value) {
+		$.utils.copyFrom(value, $.utils.getPointer(0, this));
+	}
+	toString() {
+		return "ServerResponseAll_" + super.toString();
+	}
 }
 ServerResponseAll._Trips = $.CompositeList(Trip);

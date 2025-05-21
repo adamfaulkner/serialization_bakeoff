@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 export enum MemberCasual {
-  UNKNOWN_MEMBER_CASUAL = 0,
-  MEMBER = 1,
-  CASUAL = 2
+	UNKNOWN_MEMBER_CASUAL = 0,
+	MEMBER = 1,
+	CASUAL = 2,
 }

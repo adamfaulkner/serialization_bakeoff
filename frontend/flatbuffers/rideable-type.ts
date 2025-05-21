@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 export enum RideableType {
-  UNKNOWN_RIDEABLE_TYPE = 0,
-  ELECTRIC_BIKE = 1,
-  CLASSIC_BIKE = 2
+	UNKNOWN_RIDEABLE_TYPE = 0,
+	ELECTRIC_BIKE = 1,
+	CLASSIC_BIKE = 2,
 }

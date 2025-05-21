@@ -1,285 +1,286 @@
-import * as $protobuf from "protobufjs";
+import type * as $protobuf from "protobufjs";
 import Long = require("long");
 /** Namespace trip_protobuf. */
 export namespace trip_protobuf {
+	/** RideableType enum. */
+	enum RideableType {
+		unknown_rideable_type = 0,
+		electric_bike = 1,
+		classic_bike = 2,
+	}
 
-    /** RideableType enum. */
-    enum RideableType {
-        unknown_rideable_type = 0,
-        electric_bike = 1,
-        classic_bike = 2
-    }
+	/** MemberCasual enum. */
+	enum MemberCasual {
+		unknown_member_casual = 0,
+		member = 1,
+		casual = 2,
+	}
 
-    /** MemberCasual enum. */
-    enum MemberCasual {
-        unknown_member_casual = 0,
-        member = 1,
-        casual = 2
-    }
+	/** Properties of a Trip. */
+	interface ITrip {
+		/** Trip rideId */
+		rideId?: string | null;
 
-    /** Properties of a Trip. */
-    interface ITrip {
+		/** Trip rideableType */
+		rideableType?: trip_protobuf.RideableType | null;
 
-        /** Trip rideId */
-        rideId?: (string|null);
+		/** Trip startedAtMs */
+		startedAtMs?: number | Long | null;
 
-        /** Trip rideableType */
-        rideableType?: (trip_protobuf.RideableType|null);
+		/** Trip endedAtMs */
+		endedAtMs?: number | Long | null;
 
-        /** Trip startedAtMs */
-        startedAtMs?: (number|Long|null);
+		/** Trip startStationName */
+		startStationName?: string | null;
 
-        /** Trip endedAtMs */
-        endedAtMs?: (number|Long|null);
+		/** Trip startStationId */
+		startStationId?: string | null;
 
-        /** Trip startStationName */
-        startStationName?: (string|null);
+		/** Trip endStationName */
+		endStationName?: string | null;
 
-        /** Trip startStationId */
-        startStationId?: (string|null);
+		/** Trip endStationId */
+		endStationId?: string | null;
 
-        /** Trip endStationName */
-        endStationName?: (string|null);
+		/** Trip startLat */
+		startLat?: number | null;
 
-        /** Trip endStationId */
-        endStationId?: (string|null);
+		/** Trip startLng */
+		startLng?: number | null;
 
-        /** Trip startLat */
-        startLat?: (number|null);
+		/** Trip endLat */
+		endLat?: number | null;
 
-        /** Trip startLng */
-        startLng?: (number|null);
+		/** Trip endLng */
+		endLng?: number | null;
 
-        /** Trip endLat */
-        endLat?: (number|null);
+		/** Trip memberCasual */
+		memberCasual?: trip_protobuf.MemberCasual | null;
+	}
 
-        /** Trip endLng */
-        endLng?: (number|null);
+	/** Represents a Trip. */
+	class Trip implements ITrip {
+		/**
+		 * Constructs a new Trip.
+		 * @param [properties] Properties to set
+		 */
+		constructor(properties?: trip_protobuf.ITrip);
 
-        /** Trip memberCasual */
-        memberCasual?: (trip_protobuf.MemberCasual|null);
-    }
+		/** Trip rideId. */
+		public rideId: string;
 
-    /** Represents a Trip. */
-    class Trip implements ITrip {
+		/** Trip rideableType. */
+		public rideableType: trip_protobuf.RideableType;
 
-        /**
-         * Constructs a new Trip.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: trip_protobuf.ITrip);
+		/** Trip startedAtMs. */
+		public startedAtMs: number | Long;
 
-        /** Trip rideId. */
-        public rideId: string;
+		/** Trip endedAtMs. */
+		public endedAtMs: number | Long;
 
-        /** Trip rideableType. */
-        public rideableType: trip_protobuf.RideableType;
+		/** Trip startStationName. */
+		public startStationName?: string | null;
 
-        /** Trip startedAtMs. */
-        public startedAtMs: (number|Long);
+		/** Trip startStationId. */
+		public startStationId?: string | null;
 
-        /** Trip endedAtMs. */
-        public endedAtMs: (number|Long);
+		/** Trip endStationName. */
+		public endStationName?: string | null;
 
-        /** Trip startStationName. */
-        public startStationName?: (string|null);
+		/** Trip endStationId. */
+		public endStationId?: string | null;
 
-        /** Trip startStationId. */
-        public startStationId?: (string|null);
+		/** Trip startLat. */
+		public startLat?: number | null;
 
-        /** Trip endStationName. */
-        public endStationName?: (string|null);
+		/** Trip startLng. */
+		public startLng?: number | null;
 
-        /** Trip endStationId. */
-        public endStationId?: (string|null);
+		/** Trip endLat. */
+		public endLat?: number | null;
 
-        /** Trip startLat. */
-        public startLat?: (number|null);
+		/** Trip endLng. */
+		public endLng?: number | null;
 
-        /** Trip startLng. */
-        public startLng?: (number|null);
+		/** Trip memberCasual. */
+		public memberCasual: trip_protobuf.MemberCasual;
 
-        /** Trip endLat. */
-        public endLat?: (number|null);
+		/**
+		 * Creates a new Trip instance using the specified properties.
+		 * @param [properties] Properties to set
+		 * @returns Trip instance
+		 */
+		public static create(properties?: trip_protobuf.ITrip): trip_protobuf.Trip;
 
-        /** Trip endLng. */
-        public endLng?: (number|null);
+		/**
+		 * Encodes the specified Trip message. Does not implicitly {@link trip_protobuf.Trip.verify|verify} messages.
+		 * @param message Trip message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encode(message: trip_protobuf.ITrip, writer?: $protobuf.Writer): $protobuf.Writer;
 
-        /** Trip memberCasual. */
-        public memberCasual: trip_protobuf.MemberCasual;
+		/**
+		 * Encodes the specified Trip message, length delimited. Does not implicitly {@link trip_protobuf.Trip.verify|verify} messages.
+		 * @param message Trip message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encodeDelimited(message: trip_protobuf.ITrip, writer?: $protobuf.Writer): $protobuf.Writer;
 
-        /**
-         * Creates a new Trip instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns Trip instance
-         */
-        public static create(properties?: trip_protobuf.ITrip): trip_protobuf.Trip;
+		/**
+		 * Decodes a Trip message from the specified reader or buffer.
+		 * @param reader Reader or buffer to decode from
+		 * @param [length] Message length if known beforehand
+		 * @returns Trip
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decode(reader: $protobuf.Reader | Uint8Array, length?: number): trip_protobuf.Trip;
 
-        /**
-         * Encodes the specified Trip message. Does not implicitly {@link trip_protobuf.Trip.verify|verify} messages.
-         * @param message Trip message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: trip_protobuf.ITrip, writer?: $protobuf.Writer): $protobuf.Writer;
+		/**
+		 * Decodes a Trip message from the specified reader or buffer, length delimited.
+		 * @param reader Reader or buffer to decode from
+		 * @returns Trip
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decodeDelimited(reader: $protobuf.Reader | Uint8Array): trip_protobuf.Trip;
 
-        /**
-         * Encodes the specified Trip message, length delimited. Does not implicitly {@link trip_protobuf.Trip.verify|verify} messages.
-         * @param message Trip message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: trip_protobuf.ITrip, writer?: $protobuf.Writer): $protobuf.Writer;
+		/**
+		 * Verifies a Trip message.
+		 * @param message Plain object to verify
+		 * @returns `null` if valid, otherwise the reason why it is not
+		 */
+		public static verify(message: { [k: string]: any }): string | null;
 
-        /**
-         * Decodes a Trip message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns Trip
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): trip_protobuf.Trip;
+		/**
+		 * Creates a Trip message from a plain object. Also converts values to their respective internal types.
+		 * @param object Plain object
+		 * @returns Trip
+		 */
+		public static fromObject(object: { [k: string]: any }): trip_protobuf.Trip;
 
-        /**
-         * Decodes a Trip message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns Trip
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): trip_protobuf.Trip;
+		/**
+		 * Creates a plain object from a Trip message. Also converts values to other types if specified.
+		 * @param message Trip
+		 * @param [options] Conversion options
+		 * @returns Plain object
+		 */
+		public static toObject(message: trip_protobuf.Trip, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
-        /**
-         * Verifies a Trip message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
+		/**
+		 * Converts this Trip to JSON.
+		 * @returns JSON object
+		 */
+		public toJSON(): { [k: string]: any };
 
-        /**
-         * Creates a Trip message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns Trip
-         */
-        public static fromObject(object: { [k: string]: any }): trip_protobuf.Trip;
+		/**
+		 * Gets the default type url for Trip
+		 * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+		 * @returns The default type url
+		 */
+		public static getTypeUrl(typeUrlPrefix?: string): string;
+	}
 
-        /**
-         * Creates a plain object from a Trip message. Also converts values to other types if specified.
-         * @param message Trip
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: trip_protobuf.Trip, options?: $protobuf.IConversionOptions): { [k: string]: any };
+	/** Properties of a ServerResponseAll. */
+	interface IServerResponseAll {
+		/** ServerResponseAll trips */
+		trips?: trip_protobuf.ITrip[] | null;
+	}
 
-        /**
-         * Converts this Trip to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
+	/** Represents a ServerResponseAll. */
+	class ServerResponseAll implements IServerResponseAll {
+		/**
+		 * Constructs a new ServerResponseAll.
+		 * @param [properties] Properties to set
+		 */
+		constructor(properties?: trip_protobuf.IServerResponseAll);
 
-        /**
-         * Gets the default type url for Trip
-         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns The default type url
-         */
-        public static getTypeUrl(typeUrlPrefix?: string): string;
-    }
+		/** ServerResponseAll trips. */
+		public trips: trip_protobuf.ITrip[];
 
-    /** Properties of a ServerResponseAll. */
-    interface IServerResponseAll {
+		/**
+		 * Creates a new ServerResponseAll instance using the specified properties.
+		 * @param [properties] Properties to set
+		 * @returns ServerResponseAll instance
+		 */
+		public static create(properties?: trip_protobuf.IServerResponseAll): trip_protobuf.ServerResponseAll;
 
-        /** ServerResponseAll trips */
-        trips?: (trip_protobuf.ITrip[]|null);
-    }
+		/**
+		 * Encodes the specified ServerResponseAll message. Does not implicitly {@link trip_protobuf.ServerResponseAll.verify|verify} messages.
+		 * @param message ServerResponseAll message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encode(message: trip_protobuf.IServerResponseAll, writer?: $protobuf.Writer): $protobuf.Writer;
 
-    /** Represents a ServerResponseAll. */
-    class ServerResponseAll implements IServerResponseAll {
+		/**
+		 * Encodes the specified ServerResponseAll message, length delimited. Does not implicitly {@link trip_protobuf.ServerResponseAll.verify|verify} messages.
+		 * @param message ServerResponseAll message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encodeDelimited(
+			message: trip_protobuf.IServerResponseAll,
+			writer?: $protobuf.Writer,
+		): $protobuf.Writer;
 
-        /**
-         * Constructs a new ServerResponseAll.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: trip_protobuf.IServerResponseAll);
+		/**
+		 * Decodes a ServerResponseAll message from the specified reader or buffer.
+		 * @param reader Reader or buffer to decode from
+		 * @param [length] Message length if known beforehand
+		 * @returns ServerResponseAll
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decode(reader: $protobuf.Reader | Uint8Array, length?: number): trip_protobuf.ServerResponseAll;
 
-        /** ServerResponseAll trips. */
-        public trips: trip_protobuf.ITrip[];
+		/**
+		 * Decodes a ServerResponseAll message from the specified reader or buffer, length delimited.
+		 * @param reader Reader or buffer to decode from
+		 * @returns ServerResponseAll
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decodeDelimited(reader: $protobuf.Reader | Uint8Array): trip_protobuf.ServerResponseAll;
 
-        /**
-         * Creates a new ServerResponseAll instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns ServerResponseAll instance
-         */
-        public static create(properties?: trip_protobuf.IServerResponseAll): trip_protobuf.ServerResponseAll;
+		/**
+		 * Verifies a ServerResponseAll message.
+		 * @param message Plain object to verify
+		 * @returns `null` if valid, otherwise the reason why it is not
+		 */
+		public static verify(message: { [k: string]: any }): string | null;
 
-        /**
-         * Encodes the specified ServerResponseAll message. Does not implicitly {@link trip_protobuf.ServerResponseAll.verify|verify} messages.
-         * @param message ServerResponseAll message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: trip_protobuf.IServerResponseAll, writer?: $protobuf.Writer): $protobuf.Writer;
+		/**
+		 * Creates a ServerResponseAll message from a plain object. Also converts values to their respective internal types.
+		 * @param object Plain object
+		 * @returns ServerResponseAll
+		 */
+		public static fromObject(object: { [k: string]: any }): trip_protobuf.ServerResponseAll;
 
-        /**
-         * Encodes the specified ServerResponseAll message, length delimited. Does not implicitly {@link trip_protobuf.ServerResponseAll.verify|verify} messages.
-         * @param message ServerResponseAll message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: trip_protobuf.IServerResponseAll, writer?: $protobuf.Writer): $protobuf.Writer;
+		/**
+		 * Creates a plain object from a ServerResponseAll message. Also converts values to other types if specified.
+		 * @param message ServerResponseAll
+		 * @param [options] Conversion options
+		 * @returns Plain object
+		 */
+		public static toObject(
+			message: trip_protobuf.ServerResponseAll,
+			options?: $protobuf.IConversionOptions,
+		): { [k: string]: any };
 
-        /**
-         * Decodes a ServerResponseAll message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns ServerResponseAll
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): trip_protobuf.ServerResponseAll;
+		/**
+		 * Converts this ServerResponseAll to JSON.
+		 * @returns JSON object
+		 */
+		public toJSON(): { [k: string]: any };
 
-        /**
-         * Decodes a ServerResponseAll message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns ServerResponseAll
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): trip_protobuf.ServerResponseAll;
-
-        /**
-         * Verifies a ServerResponseAll message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a ServerResponseAll message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns ServerResponseAll
-         */
-        public static fromObject(object: { [k: string]: any }): trip_protobuf.ServerResponseAll;
-
-        /**
-         * Creates a plain object from a ServerResponseAll message. Also converts values to other types if specified.
-         * @param message ServerResponseAll
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: trip_protobuf.ServerResponseAll, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this ServerResponseAll to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-
-        /**
-         * Gets the default type url for ServerResponseAll
-         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns The default type url
-         */
-        public static getTypeUrl(typeUrlPrefix?: string): string;
-    }
+		/**
+		 * Gets the default type url for ServerResponseAll
+		 * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+		 * @returns The default type url
+		 */
+		public static getTypeUrl(typeUrlPrefix?: string): string;
+	}
 }
