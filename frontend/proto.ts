@@ -17,8 +17,8 @@ export const proto: Deserializer<trip_protobuf.ServerResponseAll> = {
 			trips: deserialized.trips.map((trip) => {
 				return {
 					...trip,
-					startedAt: new Date(trip.startedAtMs),
-					endedAt: new Date(trip.endedAtMs),
+					startedAt: new Date(trip.startedAtMs ?? (0 as unknown as any)),
+					endedAt: new Date(trip.endedAtMs ?? (0 as unknown as any)),
 				};
 			}) as unknown as Array<Trip>,
 		};
