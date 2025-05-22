@@ -25,7 +25,7 @@ const DESERIALIZERS: Array<Deserializer<any, boolean>> = [
 	cbor,
 	bebop,
 	// Too slow to be worth testing
-	capnp,
+	//capnp,
 	flatbuffers,
 	currentAvro,
 	newAvro,
@@ -120,7 +120,7 @@ async function serializePerformanceTests(d: Deserializer<any, any>): Promise<Ser
 	};
 }
 
-const numTrials = 10;
+const numTrials = 1;
 
 async function runSerializePerformanceTests(): Promise<Array<SerializePerformanceStats>> {
 	const results = [];
