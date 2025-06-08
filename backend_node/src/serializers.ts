@@ -172,12 +172,12 @@ function mapToAvroMemberCasual(m: OurMemberCasual): string {
 }
 
 class AvroTripTransformer {
-	constructor (private underlying: Trip) {}
+	constructor(private underlying: Trip) {}
 
 	get rideId(): string {
 		return this.underlying.rideId;
 	}
-	
+
 	get rideableType(): string {
 		return mapToAvroRideableType(this.underlying.rideableType);
 	}
@@ -186,7 +186,7 @@ class AvroTripTransformer {
 		return this.underlying.startedAt;
 	}
 
-	get endedAt(): number{
+	get endedAt(): number {
 		return this.underlying.endedAt;
 	}
 
@@ -198,19 +198,19 @@ class AvroTripTransformer {
 		return this.underlying.startLat || null;
 	}
 
-	get startLng(): number | null{
+	get startLng(): number | null {
 		return this.underlying.startLng || null;
 	}
 
-	get endLat(): number | null{
+	get endLat(): number | null {
 		return this.underlying.endLat || null;
 	}
 
-	get endLng(): number | null{
-		return this.underlying.endLng|| null;
+	get endLng(): number | null {
+		return this.underlying.endLng || null;
 	}
 
-	get startStationId(): string | null{
+	get startStationId(): string | null {
 		return this.underlying.startStationId || null;
 	}
 
@@ -239,25 +239,6 @@ export function avroSerialize(trips: Trip[]): SerializerResponse {
 
 	const startTime = process.hrtime.bigint();
 	const response = {
-		/*
-		trips: trips.map((trip) => ({
-			rideId: trip.rideId,
-
-			rideableType: mapToAvroRideableType(trip.rideableType),
-			startedAt: trip.startedAt,
-			endedAt: trip.endedAt,
-
-			memberCasual: mapToAvroMemberCasual(trip.memberCasual),
-			startLat: trip.startLat || null,
-			startLng: trip.startLng || null,
-			endLat: trip.endLat || null,
-			endLng: trip.endLng || null,
-			startStationId: trip.startStationId || null,
-			endStationId: trip.endStationId || null,
-			startStationName: trip.startStationName || null,
-			endStationName: trip.endStationName || null,
-		})),
-		*/
 		trips: trips.map((trip) => new AvroTripTransformer(trip)),
 	};
 	const serialized = avroSchema.toBuffer(response);
