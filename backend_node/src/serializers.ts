@@ -227,6 +227,62 @@ class AvroTripTransformer {
 	}
 }
 
+class BebopTripTransformer {
+	constructor(private underlying: Trip) {}
+
+	get rideId(): string {
+		return this.underlying.rideId;
+	}
+
+	get rideableType(): BebopRideableType {
+		return mapRideableType(this.underlying.rideableType);
+	}
+
+	get startedAt(): Date {
+		return new Date(this.underlying.startedAt);
+	}
+
+	get endedAt(): Date {
+		return new Date(this.underlying.endedAt);
+	}
+
+	get startStationName(): string | undefined {
+		return this.underlying.startStationName;
+	}
+
+	get startStationId(): string | undefined {
+		return this.underlying.startStationId;
+	}
+
+	get endStationName(): string | undefined {
+		return this.underlying.endStationName;
+	}
+
+	get endStationId(): string | undefined {
+		return this.underlying.endStationId;
+	}
+
+	get startLat(): number | undefined {
+		return this.underlying.startLat;
+	}
+
+	get startLng(): number | undefined {
+		return this.underlying.startLng;
+	}
+
+	get endLat(): number | undefined {
+		return this.underlying.endLat;
+	}
+
+	get endLng(): number | undefined {
+		return this.underlying.endLng;
+	}
+
+	get memberCasual(): BebopMemberCasual {
+		return mapMemberCasual(this.underlying.memberCasual);
+	}
+}
+
 // Avro Serializer
 export function avroSerialize(trips: Trip[]): SerializerResponse {
 	initSerializers();
@@ -272,23 +328,9 @@ export function compressWithZstd(data: Buffer | string): SerializerResponse {
 export function bebopSerialize(trips: Trip[]): SerializerResponse {
 	const startTime = process.hrtime.bigint();
 
-	// Convert trips to bebop format
+	// Convert trips to bebop format using transformer to avoid object allocation
 	const response = new BebopServerResponseAll({
-		trips: trips.map((trip) => ({
-			rideId: trip.rideId,
-			rideableType: mapRideableType(trip.rideableType),
-			startedAt: new Date(trip.startedAt),
-			endedAt: new Date(trip.endedAt),
-			startStationName: trip.startStationName,
-			startStationId: trip.startStationId,
-			endStationName: trip.endStationName,
-			endStationId: trip.endStationId,
-			startLat: trip.startLat,
-			startLng: trip.startLng,
-			endLat: trip.endLat,
-			endLng: trip.endLng,
-			memberCasual: mapMemberCasual(trip.memberCasual),
-		})),
+		trips: trips.map((trip) => new BebopTripTransformer(trip)),
 	});
 
 	const serialized = response.encode();
