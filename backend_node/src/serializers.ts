@@ -23,6 +23,7 @@ import { ServerResponseAll as FlatBufferServerResponseAll } from "./flatbuffers/
 import { Trip as FlatBufferTrip } from "./flatbuffers/trip.js";
 import { RideableType as FlatBufferRideableType } from "./flatbuffers/rideable-type.js";
 import { MemberCasual as FlatBufferMemberCasual } from "./flatbuffers/member-casual.js";
+import { BebopView } from "bebop";
 
 // Set up paths for schema files
 const __filename = fileURLToPath(import.meta.url);
@@ -283,6 +284,8 @@ class BebopTripTransformer {
 	}
 }
 
+const s = Buffer.alloc(300 << 20);
+
 // Avro Serializer
 export function avroSerialize(trips: Trip[]): SerializerResponse {
 	initSerializers();
@@ -297,11 +300,13 @@ export function avroSerialize(trips: Trip[]): SerializerResponse {
 	const response = {
 		trips: trips.map((trip) => new AvroTripTransformer(trip)),
 	};
-	const serialized = avroSchema.toBuffer(response);
+	const p = avroSchema.encode(response, s);
+	const serialized = Buffer.from(s.buffer, 0, p);
+
 	const endTime = process.hrtime.bigint();
 
 	return {
-		data: serialized,
+		data: Buffer.from(serialized.buffer, serialized.byteOffset, serialized.byteLength),
 		duration: Number((endTime - startTime) / 1000000n),
 	};
 }
@@ -324,6 +329,8 @@ export function compressWithZstd(data: Buffer | string): SerializerResponse {
 	};
 }
 
+const bebopView = BebopView.getInstance();
+
 // Bebop Serializer
 export function bebopSerialize(trips: Trip[]): SerializerResponse {
 	const startTime = process.hrtime.bigint();
@@ -333,11 +340,13 @@ export function bebopSerialize(trips: Trip[]): SerializerResponse {
 		trips: trips.map((trip) => new BebopTripTransformer(trip)),
 	});
 
-	const serialized = response.encode();
+	bebopView.startWriting();
+	BebopServerResponseAll.encodeInto(response, bebopView);
+	const serialized = bebopView.toArray();
 	const endTime = process.hrtime.bigint();
 
 	return {
-		data: Buffer.from(serialized),
+		data: Buffer.from(serialized.buffer, serialized.byteOffset, serialized.byteLength),
 		duration: Number((endTime - startTime) / 1000000n),
 	};
 }
