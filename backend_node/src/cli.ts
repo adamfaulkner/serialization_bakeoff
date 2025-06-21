@@ -12,6 +12,7 @@ import {
 	avroSerialize,
 	bebopSerialize,
 	flatbuffersSerialize,
+	pbfSerialize,
 	compressWithZstd,
 } from "./serializers.js";
 import { Trip } from "./types.js";
@@ -20,7 +21,7 @@ import path from "node:path";
 import { Session } from "node:inspector/promises";
 
 // Define available serializers
-type SerializerName = "json" | "msgpack" | "cbor" | "proto" | "avro" | "bebop" | "flatbuffers";
+type SerializerName = "json" | "msgpack" | "cbor" | "proto" | "avro" | "bebop" | "flatbuffers" | "pbf";
 const availableSerializers: Record<SerializerName, (trips: Trip[]) => { data: Buffer | string; duration: number }> = {
 	json: jsonSerialize,
 	msgpack: msgpackSerialize,
@@ -29,6 +30,7 @@ const availableSerializers: Record<SerializerName, (trips: Trip[]) => { data: Bu
 	avro: avroSerialize,
 	bebop: bebopSerialize,
 	flatbuffers: flatbuffersSerialize,
+	pbf: pbfSerialize,
 };
 
 interface RunOptions {

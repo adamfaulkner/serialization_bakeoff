@@ -153,6 +153,6 @@ async function runSerializePerformanceTests(): Promise<Array<SerializePerformanc
 }
 
 const performanceStats = await runSerializePerformanceTests();
-renderCharts(performanceStats);
+// renderCharts(performanceStats);
 
 document.getElementById("data")!.textContent = JSON.stringify(performanceStats);

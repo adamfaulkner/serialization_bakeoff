@@ -22,6 +22,7 @@
 		"express": "^4.18.2",
 		"flatbuffers": "^23.5.26",
 		"msgpackr": "^1.9.9",
+		"pbf": "^4.0.1",
 		"protobufjs": "^7.2.5"
 	},
 	"devDependencies": {

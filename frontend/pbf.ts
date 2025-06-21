@@ -1,5 +1,6 @@
 import Pbf from "pbf";
 import type { Deserializer } from "./deserializer.js";
+// @ts-ignore
 import { MemberCasual, RideableType, readServerResponseAll } from "./pbf_trip.js";
 import type { ServerResponseAll, Trip } from "./trip.js";
 

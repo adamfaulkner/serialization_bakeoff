@@ -7,7 +7,7 @@ async function build() {
 		platform: "node",
 		target: "node18",
 		format: "esm",
-		outfile: "dist/index.js",
+		outdir: "dist",
 		sourcemap: true,
 		external: [
 			// Node.js built-in modules

@@ -24,6 +24,8 @@ import { Trip as FlatBufferTrip } from "./flatbuffers/trip.js";
 import { RideableType as FlatBufferRideableType } from "./flatbuffers/rideable-type.js";
 import { MemberCasual as FlatBufferMemberCasual } from "./flatbuffers/member-casual.js";
 import { BebopView } from "bebop";
+import Pbf from "pbf";
+import { writeServerResponseAll, writeTrip } from "./pbf_trip.js";
 
 // Set up paths for schema files
 const __filename = fileURLToPath(import.meta.url);
@@ -284,6 +286,86 @@ class BebopTripTransformer {
 	}
 }
 
+class PbfTripTransformer {
+	constructor(private underlying: Trip) {}
+
+	get rideId(): string {
+		return this.underlying.rideId;
+	}
+
+	get rideableType(): BebopRideableType {
+		return mapRideableType(this.underlying.rideableType);
+	}
+
+	get startedAtMs(): number {
+		return this.underlying.startedAt;
+	}
+
+	get endedAtMs(): number {
+		return this.underlying.endedAt;
+	}
+
+	get startStationId(): string | undefined {
+		return this.underlying.startStationId;
+	}
+
+	get startStationName(): string | undefined {
+		return this.underlying.startStationName;
+	}
+
+	get endStationName(): string | undefined {
+		return this.underlying.endStationName;
+	}
+
+	get endStationId(): string | undefined {
+		return this.underlying.endStationId;
+	}
+
+	get startLat(): number | undefined {
+		return this.underlying.startLat;
+	}
+
+	get startLng(): number | undefined {
+		return this.underlying.startLng;
+	}
+
+	get endLat(): number | undefined {
+		return this.underlying.endLat;
+	}
+
+	get endLng(): number | undefined {
+		return this.underlying.endLng;
+	}
+
+	get memberCasual(): BebopMemberCasual {
+		return mapMemberCasual(this.underlying.memberCasual);
+	}
+
+	updateUnderlying(trip: Trip): void {
+		this.underlying = trip;
+	}
+}
+
+class PbfTripsTransformer {
+	constructor(private underlying: Array<Trip>) {}
+
+	[Symbol.iterator](): Iterator<PbfTripTransformer> {
+		let i = 0;
+		let array = this.underlying;
+		const tripTransformer = new PbfTripTransformer(array[0]!);
+		return {
+			next() {
+				if (i < array.length) {
+					const trip = array[i++];
+					tripTransformer.updateUnderlying(trip);
+					return { value: tripTransformer, done: false };
+				}
+				return { value: undefined, done: true };
+			},
+		};
+	}
+}
+
 const s = Buffer.alloc(300 << 20);
 
 // Avro Serializer
@@ -375,6 +457,29 @@ function mapMemberCasual(type: OurMemberCasual): BebopMemberCasual {
 		default:
 			return BebopMemberCasual.Unknown;
 	}
+}
+
+// PBF Serializer
+export function pbfSerialize(trips: Trip[]): SerializerResponse {
+	const startTime = process.hrtime.bigint();
+
+	// Create a new PBF writer
+	const pbf = new Pbf(s);
+
+	// Convert trips to PBF format
+	const pbfTrips = new PbfTripsTransformer(trips);
+
+	const response = { trips: pbfTrips };
+	// @ts-ignore
+	writeServerResponseAll(response, pbf);
+
+	const serialized = pbf.finish();
+	const endTime = process.hrtime.bigint();
+
+	return {
+		data: Buffer.from(serialized.buffer, serialized.byteOffset, serialized.byteLength),
+		duration: Number((endTime - startTime) / 1000000n),
+	};
 }
 
 // FlatBuffers Serializer
